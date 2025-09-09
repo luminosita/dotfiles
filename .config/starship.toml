@@ -1,6 +1,13 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-add_newline = true
+# Tuck "new line" inside the ($all) variable
+format = """($all
+)$character"""
+
+add_newline = false
+
+[line_break]
+disabled = true
 
 [character]
 success_symbol = '[➜](bold green)'
@@ -55,6 +62,7 @@ disabled = false
 [shell]
 disabled = false
 zsh_indicator = ""
+nu_indicator = ""
 
 [nix_shell]
 disabled = false
