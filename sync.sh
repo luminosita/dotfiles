@@ -1,6 +1,8 @@
-gcloud auth login
+# gcloud auth login
 
-teller env >.config/fabric/.env
+# teller env >.config/fabric/.env
+
+refresh-global
 
 rm ~/.zshrc
 
