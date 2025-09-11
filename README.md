@@ -5,7 +5,7 @@
 ```sh
 cd ~/
 
-git clone https://github.com/vfarcic/dotfiles
+git clone https://github.com/luminosita/dotfiles.git
 
 cd dotfiles
 
@@ -80,7 +80,7 @@ Your browser has been opened to visit:
     https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=32555940559.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A8085%2F&scope=openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fappengine.admin+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fsqlservice.login+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcompute+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Faccounts.reauth&state=1ytC82p0kSBpyBt3jGPjEFqsm7tjXg&access_type=offline&code_challenge=Kl3lqOMWJqHWIBoTVFp3AEZXdXN_Fi7OgsrxEAFk9Q8&code_challenge_method=S256
 
 
-You are now logged in as [viktor@farcic.com].
+You are now logged in as [...].
 Your current project is [dot-20210822142533].  You can change this setting by running:
   $ gcloud config set project PROJECT_ID
   ▌ Follow the instructions at https://github.com/tonsky/FiraCode/wiki/VS-Code-Instructions to enable Fira Code in VS Code
@@ -124,7 +124,26 @@ dotfiles
 ➜ 
 ```
 
-Thank you for watching. See you in the next one. Cheers.
+## Optional Applications
+
+```sh
+chmod +x install-optional.sh
+./install-optional.sh
+```
+
+## Browser Extensions
+
+floccus bookmarks sync (floccus.org)
+Webpage to Markdown (chr0mekitdev)
+Dark Reader (darkreader.org)
+Medium Unlock (code4you.net)
+
+AI Grammar Checker & Paraphraser – LanguageTool (languagetool.org)
+Grammarly: AI Writing Assistant and Grammar Checker App (grammarly.com)
+Google Translate (Google)
+
+Save my Chatbot - AI Conversation Exporter (hugocollin.com)
+AI Exporter: Save ChatGPT to PDF/MD/Notion.Supports Gemini,Deepseek,Claude (saveai.net)
 
 ## Destroy
 

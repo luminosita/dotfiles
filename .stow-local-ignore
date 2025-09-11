@@ -2,6 +2,11 @@
 /.gitignore
 /devbox.*
 /gcloud
-/*.sh
+/install.sh
+/install-optional.sh
+/uninstall.sh
+/sync.sh
 /.git
-/*.md
+/README.md
+/TODO.md
+.DS_Store

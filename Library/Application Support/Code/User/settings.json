@@ -1,0 +1,39 @@
+{
+    "git.confirmSync": false,
+    "git.openRepositoryInParentFolders": "never",
+    "editor.minimap.enabled": false,
+    "git.enableSmartCommit": true,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "[markdown]": {
+        "diffEditor.ignoreTrimWhitespace": true
+    },
+    "yaml.customTags": [],
+    "files.associations": {
+        "*.tftpl": "yaml"
+    },
+    "files.exclude": {
+        "**/.terraform*": true,
+        "**/*.tfplan": true,
+        "**/terraform.tfstate*": true
+    },
+    "editor.accessibilitySupport": "off",
+    "githubPullRequests.useReviewMode": "auto",
+    "git-autoconfig.configList": [
+        {
+            "user.email": "milosh@emisia.net",
+            "user.name": "luminosita"
+        }
+    ],
+    "[json]": {
+        "editor.quickSuggestions": {
+            "strings": true
+        },
+        "editor.suggest.insertMode": "replace"
+    },
+    "git.mergeEditor": true,
+    "workbench.colorTheme": "Solarized Light",
+    "window.autoDetectColorScheme": true,
+    "workbench.preferredDarkColorTheme": "Visual Studio Dark",
+    "workbench.preferredLightColorTheme": "Solarized Light",
+    "window.systemColorTheme": "auto",
+}
