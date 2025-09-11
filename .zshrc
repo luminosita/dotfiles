@@ -60,7 +60,7 @@ bindkey '^[[B' history-substring-search-down
 zstyle ':completion:*' menu yes select
 
 # Aliases
-alias ls='eza --long --all --no-permissions --no-filesize --no-user --no-time --git'
+alias lsa='eza --long --all --no-permissions --no-filesize --no-user --no-time --git'
 alias lst='eza --long --all --no-permissions --no-filesize --no-user --git --sort modified'
 alias fzfp='fzf --preview \"bat --style numbers --color always {}\"'
 alias cat='bat --paging never --theme DarkNeon --style plain'

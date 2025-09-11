@@ -1,8 +1,0 @@
-providers:
-  google-secrets:
-    kind: google_secretmanager
-    maps:
-      - id: testsecret
-        path: projects/603089349237
-        keys:
-          test: TEST_ENV

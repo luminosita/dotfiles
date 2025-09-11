@@ -1,10 +1,7 @@
 /.devbox
 /.gitignore
-/.teller.yml
 /devbox.*
 /gcloud
-/install.sh
-/.git
-/README.md
-/TODO.md
 /*.sh
+/.git
+/*.md

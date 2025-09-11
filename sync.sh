@@ -2,8 +2,6 @@
 
 # teller env >.config/fabric/.env
 
-refresh-global
-
 rm ~/.zshrc
 
 stow .
