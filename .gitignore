@@ -2,3 +2,5 @@
 /kubeconfig.yaml
 /something.png
 /dotfiles
+.DS_Store
+devbox.lock

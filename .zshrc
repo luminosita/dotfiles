@@ -5,6 +5,7 @@ setopt HIST_IGNORE_ALL_DUPS
 
 # Devbox
 DEVBOX_NO_PROMPT=true
+eval "$(devbox global shellenv --preserve-path-stack -r)" && hash -r
 eval "$(devbox global shellenv --init-hook)"
 
 # Git
