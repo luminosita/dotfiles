@@ -1,0 +1,19 @@
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "alt+p",
+        "command": "editor.action.insertSnippet",
+        "when": "editorTextFocus",
+        "args": {
+          "snippet": "<h6 style=\"text-align: center;\">${TM_SELECTED_TEXT}</h6>"
+        }
+    },
+    {
+      "key": "alt+d",
+      "command": "editor.action.insertSnippet",
+      "when": "editorTextFocus",
+      "args": {
+        "snippet": "```bash\n${TM_SELECTED_TEXT}```"
+      }
+    }  
+]

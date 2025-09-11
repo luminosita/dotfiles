@@ -1,6 +1,7 @@
 /.config/fabric/.env
 /kubeconfig.yaml
-/something.png
 /dotfiles
 .DS_Store
 devbox.lock
+.ssh/id_rsa*
+.ssh/known_hosts*
