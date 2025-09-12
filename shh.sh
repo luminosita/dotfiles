@@ -2,17 +2,6 @@
 
 # shh.sh - Modular secret retrieval environment loader
 # Supports: .env files, Bitwarden, AWS, GCP, HashiCorp Vault, Azure Key Vault, and more
-
-# Check for Bash 4.0+ (required for associative arrays)
-if [[ ${BASH_VERSINFO[0]} -lt 4 ]]; then
-  echo -e "${RED}ERROR:${NC} This script requires Bash 4.0+"
-  echo "Your current Bash version: ${BASH_VERSION}"
-  echo "On macOS, install newer Bash with:"
-  echo "  brew install bash"
-  echo "Then run with: /usr/local/bin/bash $0 $@"
-  exit 1
-fi
-
 # Configuration
 DEFAULT_ENV_FILE=".env"
 MODULES_DIR="${HOME}/.shh_modules"  # Directory for external modules
@@ -52,34 +41,43 @@ success() {
     log "SUCCESS: $1"
 }
 
-# Function to display usage
+# Check for Bash 4.0+ (required for associative arrays)
+if [[ ${BASH_VERSINFO[0]} -lt 4 ]]; then
+  echo -e "${RED}ERROR:${NC} This script requires Bash 4.0+"
+  echo "Your current Bash version: ${BASH_VERSION}"
+  echo "On macOS, install newer Bash with:"
+  echo "  brew install bash"
+  echo "Then run with: /usr/local/bin/bash $0 $@"
+  exit 1
+fi
+
+# Usage
 usage() {
     cat << EOF
 Usage: $0 [OPTIONS] -- COMMAND [ARGS...]
 
-Load environment variables from multiple sources and execute a command.
+Load secrets from multiple sources and set custom environment variables.
 
 Options:
-  -f FILE          Load environment variables from FILE (default: .env)
-  -e KEY=VALUE     Set environment variable (can be used multiple times)
-  -s SOURCE[:KEY]  Secret source (see below for supported sources)
+  -f FILE          Load .env file (default: .env)
+  -e KEY=VALUE     Set environment variable directly
+  -s SOURCE=ENV_VAR_NAME  Secret source with explicit env var mapping
   -l               List available secret sources
-  -v               Verbose mode
-  -h               Show this help message
+  -v               Verbose mode (show loaded vars)
+  -h               Show this help
 
-Supported Secret Sources:
-  bitwarden:<item_name>[:field]      - Bitwarden CLI item field
-  aws:<profile>:<secret_name>        - AWS Secrets Manager (uses AWS CLI)
-  gcp:<project>:<secret_name>        - Google Cloud Secret Manager
-  vault:<path>:<key>                 - HashiCorp Vault (KV v2)
-  azure:<vault_name>:<secret_name>   - Azure Key Vault
-  file:<path>                        - Read entire file as value
-  env:<var_name>                     - Use existing environment variable
+Supported Sources:
+  bitwarden:<item>[:field]=ENV_VAR
+  aws:<profile>:<secret>=ENV_VAR
+  gcp:<project>:<secret>=ENV_VAR
+  vault:<path>:<key>=ENV_VAR
+  azure:<vault>:<secret>=ENV_VAR
+  file:<path>=ENV_VAR
+  env:<var_name>=ENV_VAR
 
 Examples:
-  $0 -f .env -s bitwarden:myapp:db_password -s aws:prod:api_key -- python app.py
-  $0 -s gcp:my-project:database-creds -s vault:secret/data/myapp:token -e DEBUG=true -- ./server
-  $0 -l                              # List all available modules
+  $0 -s bitwarden:Qwen_API:API_Key=QWEN_API_KEY -s aws:prod:db_pass=DB_PASS -- python app.py
+  $0 -s file:/secrets/cert.pem=SSL_CERT -e DEBUG=true -- node server.js
 EOF
     exit 1
 }
@@ -186,53 +184,92 @@ parse_secret_source() {
     printf '%s\n' "${key_parts[@]}"
 }
 
-# Load secret from a specific source
-load_secret_from_source() {
-    local source_spec="$1"
-    local source_type
-    local key_parts=()
-    
-    # Parse the source specification
-    readarray -t parsed < <(parse_secret_source "$source_spec")
-    source_type="${parsed[0]}"
-    unset 'parsed[0]'
-    key_parts=("${parsed[@]}")
-    
-    # Check if module exists
-    local module_file="$MODULES_DIR/${source_type}.sh"
-    if [[ ! -f "$module_file" ]]; then
-        error "Unknown secret source: $source_type"
+# Parse secret source string: "source:args=ENV_VAR"
+parse_secret_source() {
+    local spec="$1"
+    local source_part=""
+    local env_var_name=""
+
+    # Split on last '=' (in case value contains =)
+    if [[ "$spec" == *"="* ]]; then
+        # Extract everything after last =
+        env_var_name="${spec##*=}"
+        source_part="${spec%=*}"
+    else
+        source_part="$spec"
+        # Fallback: auto-generate env var name from source_part
+        # Replace : with _ and remove non-alphanumeric
+        env_var_name="$(echo "$source_part" | tr ':' '_' | sed 's/[^a-zA-Z0-9_]/_/g' | tr '[:lower:]' '[:upper:]')"
+    fi
+
+    # Validate env_var_name
+    if [[ ! "$env_var_name" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        error "Invalid environment variable name: '$env_var_name'"
+        error "Must start with letter/underscore, only letters, numbers, underscores allowed."
         return 1
     fi
-    
-    # Try to call the appropriate function
-    local func_name="load_secret_$source_type"
-    if declare -f "$func_name" > /dev/null; then
-        info "Loading secret from $source_type: $source_spec"
-        local result
-        result=$("$func_name" "${key_parts[@]}" 2>&1)
-        local exit_code=$?
-        
-        if [[ $exit_code -eq 0 ]]; then
-            # Extract key-value pair from result (expecting "KEY=VALUE")
-            if [[ "$result" == *"="* ]]; then
-                local key="${result%%=*}"
-                local value="${result#*=}"
-                ENV_VARS["$key"]="$value"
-                success "Loaded: $key = [REDACTED]"
-                return 0
-            else
-                # If result is just a value, use source spec as key
-                ENV_VARS["$source_spec"]="$result"
-                success "Loaded: $source_spec = [REDACTED]"
-                return 0
-            fi
+
+    echo "$source_part"
+    echo "$env_var_name"
+}
+
+# Load secret from source
+load_secret_from_source() {
+    local source_spec="$1"
+    local source_part
+    local target_env
+
+    # Parse into source part and target env var name
+    readarray -t parsed < <(parse_secret_source "$source_spec")
+    source_part="${parsed[0]}"
+    target_env="${parsed[1]}"
+
+    # Skip if parsing failed
+    [[ $? -ne 0 ]] && return 1
+
+    local module_file="$MODULES_DIR/${source_part%%:*}.sh"
+    if [[ ! -f "$module_file" ]]; then
+        error "Unknown secret source: ${source_part%%:*}"
+        return 1
+    fi
+
+    local func_name="load_secret_${source_part%%:*}"
+    if ! declare -f "$func_name" > /dev/null; then
+        error "Module function '$func_name' not defined in $module_file"
+        return 1
+    fi
+
+    # Extract source-specific args (everything after first colon)
+    local source_type="${source_part%%:*}"
+    local source_args_str="${source_part#*:}"
+
+    # Split args by colon into array
+    IFS=':' read -r -a source_args <<< "$source_args_str"
+
+    # Append target_env as last argument to module
+    source_args+=("$target_env")
+
+    info "Loading secret from $source_type → $target_env"
+
+    local result
+    result=$("$func_name" "${source_args[@]}" 2>&1)
+    local exit_code=$?
+
+    if [[ $exit_code -eq 0 ]]; then
+        # Module should output: KEY=VALUE (but we're overriding KEY with target_env)
+        # So we extract VALUE and assign to target_env
+        if [[ "$result" == *"="* ]]; then
+            # Extract value from key=value
+            local value="${result#*=}"
+            ENV_VARS["$target_env"]="$value"
+            success "Loaded: $target_env = [REDACTED]"
         else
-            error "Failed to load secret from $source_type: $result"
-            return 1
+            # If module returns just value, use as-is
+            ENV_VARS["$target_env"]="$result"
+            success "Loaded: $target_env = [REDACTED]"
         fi
     else
-        error "Module function '$func_name' not found in $module_file"
+        error "Failed to load secret: $result"
         return 1
     fi
 }
@@ -291,6 +328,11 @@ main() {
                 if [[ "$2" == *"="* ]]; then
                     local key="${2%%=*}"
                     local value="${2#*=}"
+                    # Validate key
+                    if [[ ! "$key" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+                        error "Invalid variable name: $key"
+                        exit 1
+                    fi
                     ENV_VARS["$key"]="$value"
                     info "Set environment variable: $key=[REDACTED]"
                 else
@@ -346,7 +388,9 @@ main() {
     # Display final environment state if verbose
     if [[ "$VERBOSE" == true ]]; then
         echo -e "\n${PURPLE}Final Environment Variables:${NC}"
-        env | grep -E "^(${!ENV_VARS[*]// /|})="
+        for key in "${!ENV_VARS[@]}"; do
+            printf "  %-30s = [REDACTED]\n" "$key"
+        done
         echo ""
     fi
     
