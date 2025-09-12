@@ -18,12 +18,12 @@ Global:
 - [x] tor-browser
 - [x] brave ( +extensions)
 - [ ] Podman/Docker
-- [ ] Wireguard VPN
+- [x] Wireguard VPN
 - [x] Visual Studio Code
 
 Shell:
-- [ ] bitwarden cli
-- [ ] summon
+- [ ] cleanup gloud projects
+- [x] bitwarden cli
 - [x] gh cli
 - [ ] torsocks
 - [x] GitHub SSH key (insecure)

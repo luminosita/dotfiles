@@ -23,3 +23,4 @@ brew install cloudflare-warp
 #brew install --cask signal
 #brew install --cask virtualbox
 #brew install yt-dlp
+#brew isntall --cask torguard

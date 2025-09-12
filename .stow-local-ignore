@@ -6,6 +6,7 @@
 /install-optional.sh
 /uninstall.sh
 /sync.sh
+/shh.sh
 /.git
 /README.md
 /TODO.md
