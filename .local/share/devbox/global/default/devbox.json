@@ -11,6 +11,7 @@
     "eza@latest",
     "thefuck@latest",
     "zellij@latest",
+    "yq@latest",
     "fabric-ai@latest"
   ],
   "shell": {

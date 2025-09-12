@@ -12,7 +12,7 @@ Author Daniel Miessler February 24, 2024
 
 I’m starting to think Framing is everything.
 Framing
-The process by which individuals construct and interpret their reality—concsiously or unconsciously—through specific lenses or perspectives.
+The process by which individuals construct and interpret their reality—consciously or unconsciously—through specific lenses or perspectives.
 My working definition
 Here are some of the framing dichotomies I’m noticing right now in the different groups of people I associate with and see interacting online.
 AI and the future of work
@@ -110,7 +110,7 @@ I’m going to continue thinking on this. I hope you do as well, and let me know
 
 # OUTPUT SECTIONS
 
-- In a section called NEGATIVE FRAMES, output 1 - 5 of the most negative frames you found in the input. Each frame / bullet should be wide in scope and be less than 15 words.
+- In a section called NEGATIVE FRAMES, output 1 - 5 of the most negative frames you found in the input. Each frame / bullet should be wide in scope and be less than 16 words.
 
 - Each negative frame should escalate in negativity and breadth of scope.
 
@@ -120,7 +120,7 @@ E.g.,
 "Dating is hopeless at this point."
 "Why even try in this life if I can't make connections?"
 
-- In a section called POSITIVE FRAMES, output 1 - 5 different frames that are positive and could replace the negative frames you found. Each frame / bullet should be wide in scope and be less than 15 words.
+- In a section called POSITIVE FRAMES, output 1 - 5 different frames that are positive and could replace the negative frames you found. Each frame / bullet should be wide in scope and be less than 16 words.
 
 - Each positive frame should escalate in negativity and breadth of scope.
 

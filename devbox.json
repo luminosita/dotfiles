@@ -3,13 +3,5 @@
   "packages": [
     "gum@latest",
     "stow@latest"
-  ],
-  "shell": {
-    "init_hook": [
-      "autoload -Uz compinit",
-      "compinit",
-      "source <(kubectl completion zsh)"
-    ],
-    "scripts": {}
-  }
+  ]
 }

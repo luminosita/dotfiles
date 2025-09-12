@@ -131,6 +131,16 @@ chmod +x install-optional.sh
 ./install-optional.sh
 ```
 
+## Fabric
+
+Run Setup and configure all the required components.
+
+For Custom Patterns use `~/.config/fabric/patterns` path. Default values for the rest of required options.
+
+```sh
+fabric --setup
+```
+
 ## Browser Extensions
 
 floccus bookmarks sync (floccus.org)
