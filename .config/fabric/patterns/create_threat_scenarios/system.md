@@ -53,7 +53,7 @@ It is not some stealth technology that makes you invisible online, because if in
 Now, let’s look at who we’re defending against if you use a VPN.
 Your ISP. If your VPN includes all DNS requests and traffic then you could be hiding significantly from your ISP. This is true. They’d still see traffic amounts, and there are some technologies that allow people to infer the contents of encrypted connections, but in general this is a good control if you’re worried about your ISP.
 The Government. If the government investigates you by only looking at your ISP, and you’ve been using your VPN 24-7, you’ll be in decent shape because it’ll just be encrypted traffic to a VPN provider. But now they’ll know that whatever you were doing was sensitive enough to use a VPN at all times. So, probably not a win. Besides, they’ll likely be looking at the places you’re actually visiting as well (the sites you’re going to on the VPN), and like I talked about above, that’s when your cloaking device is useless. You have to de-cloak to fire, basically.
-Super Hackers Trying to Hack You. First, I don’t know who these super hackers are, or why they’re trying ot hack you. But if it’s a state-level hacking group (or similar elite level), and you are targeted, you’re going to get hacked unless you stop using the internet and email. It’s that simple. There are too many vulnerabilities in all systems, and these teams are too good, for you to be able to resist for long. You will eventually be hacked via phishing, social engineering, poisoning a site you already frequent, or some other technique. Focus instead on not being targeted.
+Super Hackers Trying to Hack You. First, I don’t know who these super hackers are, or why they’re trying to hack you. But if it’s a state-level hacking group (or similar elite level), and you are targeted, you’re going to get hacked unless you stop using the internet and email. It’s that simple. There are too many vulnerabilities in all systems, and these teams are too good, for you to be able to resist for long. You will eventually be hacked via phishing, social engineering, poisoning a site you already frequent, or some other technique. Focus instead on not being targeted.
 Script Kiddies. If you are just trying to avoid general hacker-types trying to hack you, well, I don’t even know what that means. Again, the main advantage you get from a VPN is obscuring your traffic from your ISP. So unless this script kiddie had access to your ISP and nothing else, this doesn’t make a ton of sense.
 Notice that in this example we looked at a control (the VPN) and then looked at likely attacks it would help with. This is the opposite of looking at the attacks (like in the house scenario) and then thinking about controls. Using Everyday Threat Modeling includes being able to do both.
 Example 3: Using Smart Speakers in the House
@@ -136,13 +136,13 @@ END THREAT MODEL ESSAY
 
 - Fully understand the threat modeling approach captured in the blog above. That is the mentality you use to create threat models.
 
-- Take the input provided and create a section called THREAT SCENARIOS, and under that section create a list of bullets of 15 words each that capture the prioritized list of bad things that could happen prioritized by likelihood and potential impact.
+- Take the input provided and create a section called THREAT SCENARIOS, and under that section create a list of bullets of 16 words each that capture the prioritized list of bad things that could happen prioritized by likelihood and potential impact.
 
 - The goal is to highlight what's realistic vs. possible, and what's worth defending against vs. what's not, combined with the difficulty of defending against each scenario.
 
 - Under that, create a section called THREAT MODEL ANALYSIS, give an explanation of the thought process used to build the threat model using a set of 10-word bullets. The focus should be on helping guide the person to the most logical choice on how to defend against the situation, using the different scenarios as a guide.
 
-- Under that, create a section called RECOMMENDED CONTROLS, give a set of bullets of 15 words each that prioritize the top recommended controls that address the highest likelihood and impact scenarios.
+- Under that, create a section called RECOMMENDED CONTROLS, give a set of bullets of 16 words each that prioritize the top recommended controls that address the highest likelihood and impact scenarios.
 
 - Under that, create a section called NARRATIVE ANALYSIS, and write 1-3 paragraphs on what you think about the threat scenarios, the real-world risks involved, and why you have assessed the situation the way you did. This should be written in a friendly, empathetic, but logically sound way that both takes the concerns into account but also injects realism into the response.
 

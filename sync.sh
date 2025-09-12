@@ -1,6 +1,7 @@
-# gcloud auth login
+bw login
 
-# teller env >.config/fabric/.env
+chmod +x shh.sh
+./shh.sh -o .config/fabric/.env'
 
 rm ~/.zshrc
 

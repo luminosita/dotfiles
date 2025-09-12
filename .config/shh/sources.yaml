@@ -1,0 +1,3 @@
+sources:
+#  - bitwarden:Gemini_API:API_Key=GEMINI_API_KEY
+  - bitwarden:Gemini_API:Free_API_Key=GEMINI_API_KEY

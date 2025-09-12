@@ -4,8 +4,15 @@
 # Supports: .env files, Bitwarden, AWS, GCP, HashiCorp Vault, Azure Key Vault, and more
 # Configuration
 DEFAULT_ENV_FILE=".env"
-MODULES_DIR="${HOME}/.shh_modules"  # Directory for external modules
+MODULES_DIR="${HOME}/.config/shh/modules"  # Directory for external modules
 LOG_FILE="/tmp/shh.log"
+# Global variables
+declare -A ENV_VARS
+VERBOSE=false
+SECRET_SOURCES=()
+SOURCES_FILE="${HOME}/.config/shh/sources.yaml"
+OUTPUT_FILE=""
+ENV_FILE="$DEFAULT_ENV_FILE"
 
 # Colors for output
 RED='\033[0;31m'
@@ -59,12 +66,15 @@ Usage: $0 [OPTIONS] -- COMMAND [ARGS...]
 Load secrets from multiple sources and set custom environment variables.
 
 Options:
-  -f FILE          Load .env file (default: .env)
-  -e KEY=VALUE     Set environment variable directly
-  -s SOURCE=ENV_VAR_NAME  Secret source with explicit env var mapping
-  -l               List available secret sources
-  -v               Verbose mode (show loaded vars)
-  -h               Show this help
+  -f | --file FILE                      Load .env file (default: .env)
+  -e | --env KEY=VALUE                  Set environment variable directly
+  -s | --secret SOURCE=ENV_VAR_NAME     Secret source with explicit env var mapping
+  -i | --sources-file FILE              Load multiple sources from file (YAML or line-based)
+  -o | --output FILE                    Export all loaded env vars to .env-style file
+
+  -l | --list                           List available secret sources
+  -v | --verbose                        Verbose mode (show loaded vars)
+  -h | --help                           Show this help
 
 Supported Sources:
   bitwarden:<item>[:field]=ENV_VAR
@@ -75,9 +85,20 @@ Supported Sources:
   file:<path>=ENV_VAR
   env:<var_name>=ENV_VAR
 
+File Format Examples:
+
+# YAML (sources.yaml)
+sources:
+  - bitwarden:MyApp:API_Key=APP_KEY
+  - aws:prod:db_pass=DB_PASS
+
+# Simple list (sources.list)
+bitwarden:MyApp:API_Key=APP_KEY
+aws:prod:db_pass=DB_PASS
+
 Examples:
-  $0 -s bitwarden:Qwen_API:API_Key=QWEN_API_KEY -s aws:prod:db_pass=DB_PASS -- python app.py
-  $0 -s file:/secrets/cert.pem=SSL_CERT -e DEBUG=true -- node server.js
+  $0 --sources-file secrets.sources -s bitwarden:extra:token=EXTRA_TOKEN -- python app.py
+  $0 -f .env --sources-file sources.list -- node server.js
 EOF
     exit 1
 }
@@ -85,12 +106,6 @@ EOF
 # Initialize logging
 mkdir -p "$(dirname "$LOG_FILE")"
 > "$LOG_FILE"  # Clear log file
-
-# Global variables
-declare -A ENV_VARS
-VERBOSE=false
-SECRET_SOURCES=()
-ENV_FILE="$DEFAULT_ENV_FILE"
 
 # Create modules directory if it doesn't exist
 create_modules_dir() {
@@ -153,8 +168,7 @@ load_modules() {
 
 # Check if required CLI tools are installed
 check_dependencies() {
-    local deps=("jq" "awk" "grep")
-    
+    local deps=("jq" "yq" "awk" "grep" "curl")  # curl needed for bitwarden REST API
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &> /dev/null; then
             error "Required dependency '$dep' is not installed"
@@ -163,25 +177,6 @@ check_dependencies() {
     done
     
     return 0
-}
-
-# Parse secret source string (format: source:key1:key2:...)
-parse_secret_source() {
-    local source_str="$1"
-    local source_type=""
-    local key_parts=()
-    
-    # Split by first colon
-    if [[ "$source_str" == *:* ]]; then
-        source_type="${source_str%%:*}"
-        # Extract remaining parts after first colon
-        key_parts=($(echo "${source_str#*:}" | tr ':' '\n'))
-    else
-        source_type="$source_str"
-    fi
-    
-    echo "$source_type"
-    printf '%s\n' "${key_parts[@]}"
 }
 
 # Parse secret source string: "source:args=ENV_VAR"
@@ -211,6 +206,60 @@ parse_secret_source() {
 
     echo "$source_part"
     echo "$env_var_name"
+}
+
+# Load secrets from file (YAML only — requires yq)
+load_sources_from_file() {
+    local file="$1"
+    if [[ ! -f "$file" ]]; then
+        error "Sources file not found: $file"
+        return 1
+    fi
+
+    info "Loading secret sources from YAML file: $file"
+
+    # Validate yq is available
+    if ! command -v yq &> /dev/null; then
+        error "yq is required for YAML source loading but not installed"
+        error "Install with: brew install yq  # macOS"
+        error "Or: sudo snap install yq     # Ubuntu/Debian"
+        return 1
+    fi
+
+    # Check if 'sources' key exists and is an array
+    local sources_count
+    sources_count=$(yq '.sources | length' "$file" 2>/dev/null)
+
+    if [[ $? -ne 0 ]] || [[ -z "$sources_count" ]] || [[ "$sources_count" == "null" ]]; then
+        error "YAML file must contain a top-level 'sources' array (e.g., sources: [ ... ])"
+        error "Example:"
+        error "  sources:"
+        error "    - bitwarden:item:field=ENV_VAR"
+        return 1
+    fi
+
+    if [[ "$sources_count" -eq 0 ]]; then
+        warn "YAML file has 'sources' array but it is empty"
+        return 0
+    fi
+
+    # Extract each source item as a string
+    # yq -r '.sources[]' outputs one line per source
+    while IFS= read -r source_spec; do
+        # Skip empty lines
+        [[ -z "$source_spec" ]] && continue
+
+        # Validate source spec format before adding
+        if [[ "$source_spec" != *"="* ]]; then
+            warn "Skipping invalid source (missing '='): $source_spec"
+            continue
+        fi
+
+        SECRET_SOURCES+=("$source_spec")
+        info "Loaded: $source_spec"
+    done < <(yq -r '.sources[]' "$file")
+
+    info "Successfully loaded ${#SECRET_SOURCES[@]} sources from YAML file."
 }
 
 # Load secret from source
@@ -274,6 +323,13 @@ load_secret_from_source() {
     fi
 }
 
+# Process all secret sources
+process_secret_sources() {
+    for source in "${SECRET_SOURCES[@]}"; do
+        load_secret_from_source "$source"
+    done
+}
+
 # Load environment variables from file
 load_env_file() {
     if [[ -f "$ENV_FILE" ]]; then
@@ -286,13 +342,6 @@ load_env_file() {
     fi
 }
 
-# Process all secret sources
-process_secret_sources() {
-    for source in "${SECRET_SOURCES[@]}"; do
-        load_secret_from_source "$source"
-    done
-}
-
 # Export all collected environment variables
 export_env_vars() {
     info "Exporting ${#ENV_VARS[@]} environment variables"
@@ -303,6 +352,32 @@ export_env_vars() {
             info "Exported: $key=[REDACTED]"  # Don't log actual secrets
         fi
     done
+}
+
+# Export loaded variables to output file (in .env format)
+export_to_file() {
+    local output_file="$1"
+    if [[ -z "$output_file" ]]; then
+        error "No output file specified for --output"
+        return 1
+    fi
+
+    # Ensure parent directory exists
+    mkdir -p "$(dirname "$output_file")" 2>/dev/null
+
+    # Write each key=value pair
+    info "Exporting ${#ENV_VARS[@]} variables to: $output_file"
+
+    {
+        for key in "${!ENV_VARS[@]}"; do
+            printf '%s=%s\n' "$key" "${ENV_VARS[$key]}"
+        done
+    } >> "$output_file"
+
+    # Set permissions to secure (read-only for owner)
+    chmod 600 "$output_file"
+
+    success "Exported to: $output_file"
 }
 
 # Main execution
@@ -345,6 +420,14 @@ main() {
                 SECRET_SOURCES+=("$2")
                 shift 2
                 ;;
+            -i|--sources-file)
+                SOURCES_FILE="$2"
+                shift 2
+                ;;
+            -o|--output)
+                OUTPUT_FILE="$2"
+                shift 2
+                ;;
             -l|--list)
                 info "Available secret sources:"
                 ls -1 "$MODULES_DIR"/*.sh 2>/dev/null | while read -r mod; do
@@ -370,12 +453,11 @@ main() {
         esac
     done
     
-    # Check if command is provided
-    if [[ $# -eq 0 ]]; then
-        error "No command specified. Use '--' followed by your command."
-        usage
+    # Load sources from file (if provided)
+    if [[ -n "$SOURCES_FILE" ]]; then
+        load_sources_from_file "$SOURCES_FILE" || exit 1
     fi
-    
+
     # Load environment file
     load_env_file
     
@@ -385,6 +467,11 @@ main() {
     # Export all variables
     export_env_vars
     
+    # Export to file if requested
+    if [[ -n "$OUTPUT_FILE" ]]; then
+        export_to_file "$OUTPUT_FILE" || exit 1
+    fi
+
     # Display final environment state if verbose
     if [[ "$VERBOSE" == true ]]; then
         echo -e "\n${PURPLE}Final Environment Variables:${NC}"
@@ -394,9 +481,25 @@ main() {
         echo ""
     fi
     
-    # Execute the command
-    info "Executing: $*"
-    exec "$@"
+    if [[ -n "$OUTPUT_FILE" ]]; then
+        # User wants to export only — command is optional
+        if [[ $# -eq 0 ]]; then
+            info "Secrets exported to '$OUTPUT_FILE'. No command specified — exiting."
+            exit 0
+        else
+            # Command provided — execute it after export
+            info "Secrets exported to '$OUTPUT_FILE'. Executing: $*"
+            exec "$@"
+        fi
+    else
+        # No output file → command is REQUIRED
+        if [[ $# -eq 0 ]]; then
+            error "No command specified. Use '--' followed by your command, or use --output FILE to export only."
+            usage
+        fi
+        info "Executing: $*"
+        exec "$@"
+    fi
 }
 
 # Start main execution

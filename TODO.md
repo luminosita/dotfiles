@@ -22,7 +22,7 @@ Global:
 - [x] Visual Studio Code
 
 Shell:
-- [ ] cleanup gloud projects
+- [x] cleanup gloud projects
 - [x] bitwarden cli
 - [x] gh cli
 - [ ] torsocks

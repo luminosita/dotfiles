@@ -6,3 +6,6 @@ bash -c "$(curl --fail --show-error --silent \
 
 # https://www.jetify.com/devbox/docs/installing_devbox/
 curl -fsSL https://get.jetify.com/devbox | bash
+
+# Required for pulling secrets for Fabric AI
+brew install --cask bitwarden
