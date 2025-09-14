@@ -36,4 +36,5 @@
     "workbench.preferredDarkColorTheme": "Visual Studio Dark",
     "workbench.preferredLightColorTheme": "Solarized Light",
     "window.systemColorTheme": "auto",
+    "markdown-preview-enhanced.previewTheme": "github-dark.css",
 }
