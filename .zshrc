@@ -69,3 +69,14 @@ alias kubectl='kubecolor'
 export PATH="$HOME/go/bin:$PATH"
 export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+
+# Local Homebrew
+export PATH="$HOME/homebrew/bin:$PATH"
+export MANPATH="$HOME/homebrew/share/man:$MANPATH"
+export INFOPATH="$HOME/homebrew/share/info:$INFOPATH"
+export HOMEBREW_PREFIX="$HOME/homebrew"
+export HOMEBREW_REPOSITORY="$HOME/homebrew"
+export HOMEBREW_CACHE="$HOME/.cache/homebrew"
+export HOMEBREW_TEMP="$HOME/tmp/homebrew"
+export HOMEBREW_LOGS="$HOME/.cache/homebrew/Logs"
+#export HOMEBREW_BOTTLE_DOMAIN=""  # Optional: avoid shared precompiled binaries
