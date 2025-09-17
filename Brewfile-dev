@@ -1,0 +1,9 @@
+cask "visual-studio-code"
+
+cask "tor-browser"
+cask "brave-browser"
+
+cask "sublime-text"
+cask "iterm2"
+brew "yt-dlp"
+

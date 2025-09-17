@@ -3,8 +3,10 @@
 /devbox.*
 /gcloud
 /install.sh
+/install-dev.sh
 /install-optional.sh
 /uninstall.sh
+/Brewfile*
 /sync.sh
 /shh.sh
 /.git
