@@ -1,12 +1,12 @@
-/.devbox
 /.gitignore
-/devbox.*
+/flake.*
 /gcloud
 /install.sh
 /install-dev.sh
 /install-optional.sh
 /uninstall.sh
-/Brewfile*
+/Brewfile-dev
+/Brewfile-opt
 /sync.sh
 /shh.sh
 /.git
