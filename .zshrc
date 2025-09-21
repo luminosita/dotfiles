@@ -4,15 +4,15 @@ compinit
 setopt HIST_IGNORE_ALL_DUPS
 
 # Devbox
-DEVBOX_NO_PROMPT=true
-eval "$(devbox global shellenv --preserve-path-stack -r)" && hash -r
-eval "$(devbox global shellenv --init-hook)"
+# DEVBOX_NO_PROMPT=true
+# eval "$(devbox global shellenv --preserve-path-stack -r)" && hash -r
+# eval "$(devbox global shellenv --init-hook)"
 
 # Git
 LANG=en_US.UTF-8
 
 # Completions
-source <(devbox completion zsh)
+#source <(devbox completion zsh)
 #source <(docker completion zsh)
 source <(kubectl completion zsh)
 
@@ -20,7 +20,7 @@ source <(kubectl completion zsh)
 eval "$(starship init zsh)"
 
 # The Fuck
-eval $(thefuck --alias)
+#eval $(thefuck --alias)
 
 # Zoxide
 eval "$(zoxide init --cmd cd zsh)"
