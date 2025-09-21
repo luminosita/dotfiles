@@ -36,5 +36,8 @@
     "workbench.preferredDarkColorTheme": "Visual Studio Dark",
     "workbench.preferredLightColorTheme": "Solarized Light",
     "window.systemColorTheme": "auto",
-    "markdown-preview-enhanced.previewTheme": "github-dark.css",
+    "markdown-preview-enhanced.previewTheme": "monokai.css",
+    "markdown-preview-enhanced.codeBlockTheme": "monokai.css",
+    "markdown-preview-enhanced.revealjsTheme": "black.css",
+    "markdown-preview-enhanced.enablePreviewZenMode": false,
 }
