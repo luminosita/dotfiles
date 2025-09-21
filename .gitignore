@@ -3,5 +3,4 @@
 /dotfiles
 .DS_Store
 devbox.lock
-.ssh/id_rsa*
-.ssh/known_hosts*
+.ssh/
