@@ -15,7 +15,7 @@ git fetch
 
 git checkout dotfiles
 
-chmod +x install.sh
+chmod +x install.sh install-dev.sh install-optional.sh sync.sh
 ```
 
 > [!IMPORTANT]
@@ -36,55 +36,17 @@ Execute the install script.
 
 ```sh
 ./install.sh
+./install-dev.sh
 ```
-
-The output is as follows (truncated for brevity).
-
-```
-...
-Downloading and Installing
-✓ Downloading devbox binary... [DONE]
-→ Installing in /usr/local/bin/devbox (requires sudo)...
-✓ Installing in /usr/local/bin/devbox... [DONE]
-✓ Successfully installed devbox 🚀
-
-Next Steps
-  1. Learn how to use devbox
-     Run devbox help or read the docs at https://github.com/jetify-com/devbox
-  2. Get help and give feedback
-     Join our community at https://discord.gg/jetify
-```
-
-A few moments later…
-
-Everything was installed, and that was the boring part that you already know how to do. The only important thing to note is that when I say “everything is installed”, I am lying. I’m a lying liar that lies. The truth is that only global apps or, to be more precise, global CLIs were installed. There aren’t many of them, simply because most of the tools I need are project-specific, including the project to configure everything. Those project specific tools will be installed through Devbox.
-
 
 ```sh
-devbox shell
+nix develop --impure
 ```
 
 Now that we have the tools, both those installed globally and those we need in relataion to the repo we’re working on, we can, finally, take a look at the script that does that.
 
 ```sh
-chmod +x sync.sh
-
 ./sync.sh
-```
-
-The output is as follows.
-
-```
-Your browser has been opened to visit:
-
-    https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=32555940559.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A8085%2F&scope=openid+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloud-platform+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fappengine.admin+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fsqlservice.login+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcompute+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Faccounts.reauth&state=1ytC82p0kSBpyBt3jGPjEFqsm7tjXg&access_type=offline&code_challenge=Kl3lqOMWJqHWIBoTVFp3AEZXdXN_Fi7OgsrxEAFk9Q8&code_challenge_method=S256
-
-
-You are now logged in as [...].
-Your current project is [dot-20210822142533].  You can change this setting by running:
-  $ gcloud config set project PROJECT_ID
-  ▌ Follow the instructions at https://github.com/tonsky/FiraCode/wiki/VS-Code-Instructions to enable Fira Code in VS Code
-  ▌ Execute  source ~/.zshrc .
 ```
 
 Stow created the symbolic links so now _.zshrc_ from this repo is available through the link in the home directory (`~/.zshrc`) as well and we can, for example, `source` it.
@@ -96,11 +58,11 @@ source ~/.zshrc
 The output is as follows.
 
 ```
-dotfiles [📝] via ❄️  devbox
+dotfiles [📝] via ❄️  impure
 ➜ 
 ```
 
-> Exit devbox shell. Close the terminal session. Start a new terminal session.
+> Exit nix shell. Close the terminal session. Start a new terminal session.
 
 The output is as follows.
 
@@ -159,7 +121,7 @@ Markdown Viewer (simov.github.io)
 
 ## Destroy
 
-> Enter devbox shell from ~/dotfiles folder
+> Run nixd (alias) from ~/dotfiles folder
 
 ```sh
 ./uninstall.sh

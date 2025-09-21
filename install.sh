@@ -23,8 +23,9 @@ curl -sL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCo
 bash -c "$(curl --fail --show-error --silent \
     --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
 
-# https://www.jetify.com/devbox/docs/installing_devbox/
-curl -fsSL https://get.jetify.com/devbox | bash
+# local single-user Nix install 
+# add ` --yes --quiet` to command line if too many questions
+sh <(curl -L https://nixos.org/nix/install) --no-daemon
 
 # Required for pulling secrets for Fabric AI
 brew install bitwarden-cli

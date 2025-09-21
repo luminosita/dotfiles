@@ -1,5 +1,5 @@
 {
-  description = "Shell using nixpkgs-unstable with external overlay";
+  description = "Shell using nixpkgs-unstable";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -9,11 +9,8 @@
     let
       system = "aarch64-darwin"; # adjust to your system (e.g., x86_64-linux)
       
-      devshellOverlay = import "${toString (builtins.getEnv "HOME")}/.config/nixpkgs/overlays/devshell.nix";
-
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ devshellOverlay ];
       };
     in {
       devShells.${system}.default = pkgs.mkShell {

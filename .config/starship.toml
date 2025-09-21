@@ -66,7 +66,7 @@ nu_indicator = ""
 
 [nix_shell]
 disabled = false
-impure_msg = 'devbox'
+impure_msg = 'impure'
 format = 'via [$symbol$state](bold purple) '
 
 [sudo]
