@@ -1,9 +1,13 @@
+## BUGS:
+- [ ] "command not found" when opening fresh iTerm window
+
+## TODO:
 - [X] starship
 - [X] nuscripts (farcic)
 - [x] devbox
 - [x] dotfiles, sync (farcic)
 - [x] zellij
-- [ ] fabric (env)
+- [x] fabric (env)
 - [x] iterm2
 - [x] cleanup devbox.json and default devbox.json
 - [ ] renovate for versions
@@ -17,7 +21,7 @@
 Global:
 - [x] tor-browser
 - [x] brave ( +extensions)
-- [ ] Podman/Docker
+- [x] Podman/Docker
 - [x] Wireguard VPN
 - [x] Visual Studio Code
 
