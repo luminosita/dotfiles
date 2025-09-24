@@ -4,7 +4,17 @@ model_list:
     litellm_params:
       model: gemini/gemini-2.5-pro
       api_key: os.environ/GEMINI_API_KEY
-  
+      tools:
+        - function_declarations:
+            - name: web_search
+              description: Search the web
+              parameters:
+                type: object
+                properties:
+                  query:
+                    type: string
+                    description: Search query
+                required: ["query"]  
   - model_name: gemini-2-5-flash
     litellm_params:
       model: gemini/gemini-2.5-flash
