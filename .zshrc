@@ -3,6 +3,22 @@ compinit
 
 setopt HIST_IGNORE_ALL_DUPS
 
+# PATH setup
+export PATH="$HOME/go/bin:$PATH"
+export PATH="/usr/local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+
+# Local Homebrew
+export PATH="$HOME/homebrew/bin:$PATH"
+export MANPATH="$HOME/homebrew/share/man:$MANPATH"
+export INFOPATH="$HOME/homebrew/share/info:$INFOPATH"
+export HOMEBREW_PREFIX="$HOME/homebrew"
+export HOMEBREW_REPOSITORY="$HOME/homebrew"
+export HOMEBREW_CACHE="$HOME/.cache/homebrew"
+export HOMEBREW_TEMP="$HOME/tmp/homebrew"
+export HOMEBREW_LOGS="$HOME/.cache/homebrew/Logs"
+#export HOMEBREW_BOTTLE_DOMAIN=""  # Optional: avoid shared precompiled binaries
+
 # Devbox
 # DEVBOX_NO_PROMPT=true
 # eval "$(devbox global shellenv --preserve-path-stack -r)" && hash -r
@@ -66,18 +82,3 @@ alias fzfp='fzf --preview \"bat --style numbers --color always {}\"'
 alias cat='bat --paging never --theme DarkNeon --style plain'
 alias kubectl='kubecolor'
 alias nixd='NIXPKGS_ALLOW_UNFREE=1 nix develop --impure'
-
-export PATH="$HOME/go/bin:$PATH"
-export PATH="/usr/local/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-
-# Local Homebrew
-export PATH="$HOME/homebrew/bin:$PATH"
-export MANPATH="$HOME/homebrew/share/man:$MANPATH"
-export INFOPATH="$HOME/homebrew/share/info:$INFOPATH"
-export HOMEBREW_PREFIX="$HOME/homebrew"
-export HOMEBREW_REPOSITORY="$HOME/homebrew"
-export HOMEBREW_CACHE="$HOME/.cache/homebrew"
-export HOMEBREW_TEMP="$HOME/tmp/homebrew"
-export HOMEBREW_LOGS="$HOME/.cache/homebrew/Logs"
-#export HOMEBREW_BOTTLE_DOMAIN=""  # Optional: avoid shared precompiled binaries
