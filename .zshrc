@@ -79,6 +79,6 @@ zstyle ':completion:*' menu yes select
 alias lsa='eza --long --all --no-permissions --no-filesize --no-user --no-time --git'
 alias lst='eza --long --all --no-permissions --no-filesize --no-user --git --sort modified'
 alias fzfp='fzf --preview \"bat --style numbers --color always {}\"'
-alias cat='bat --paging never --theme DarkNeon --style plain'
+alias cat='bat --paging never --theme-dark DarkNeon --theme-light GitHub --style changes,header-filename,snip'
 alias kubectl='kubecolor'
 alias nixd='NIXPKGS_ALLOW_UNFREE=1 nix develop --impure'
