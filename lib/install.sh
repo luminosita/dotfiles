@@ -15,6 +15,7 @@ source "$SCRIPT_DIR/lib/fonts.sh"
 
 # Base packages (hardcoded)
 BASE_PACKAGES=(
+    yq
     git
     curl
     stow
@@ -53,9 +54,6 @@ print_os_info
 # Check if OS is supported
 check_supported_os
 
-# Load package mappings
-load_package_mappings "$SCRIPT_DIR/packages.yaml"
-
 # Update package repositories
 if [[ "$OS" == "linux" ]]; then
     echo -e "${BLUE}Updating package repositories...${NC}"
@@ -80,9 +78,11 @@ if [ "$INSTALL_BASE" = true ]; then
     # Install Nix (single-user install, cross-platform)
     if ! command -v nix &> /dev/null; then
         echo -e "${BLUE}Installing Nix package manager...${NC}"
-        echo -e "${YELLOW}Add --yes to skip prompts if needed${NC}"
-        sh <(curl -L https://nixos.org/nix/install) --no-daemon
-        echo -e "${GREEN}✓ Nix installed${NC}"
+        if sh <(curl -L https://nixos.org/nix/install) --no-daemon 2>/dev/null; then
+            echo -e "${GREEN}✓ Nix installed${NC}"
+        else
+            echo -e "${YELLOW}⚠ Nix installation failed (skipping)${NC}"
+        fi
     else
         echo -e "${GREEN}✓ Nix already installed${NC}"
     fi
@@ -94,6 +94,10 @@ fi
 # Custom packages installation
 if [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
     echo -e "${BLUE}=== Custom Packages Installation ===${NC}"
+
+    # Load package mappings
+    load_package_mappings "$SCRIPT_DIR/packages.yaml"
+
     install_packages "${CUSTOM_PACKAGES[@]}"
     echo -e "${GREEN}=== Custom Packages Installation complete ===${NC}"
 fi

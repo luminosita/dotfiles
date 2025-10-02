@@ -1,17 +1,6 @@
 # Dotfiles Installation Configuration
 # Define all available packages, casks, and extensions
 
-# Base system packages (always recommended)
-base:
-  packages:
-    - yq
-    - gum
-    - git
-    - stow
-    - xz-utils
-    - fontconfig
-    - gnupg
-
 # Development tools (CLI)
 dev:
   packages:
@@ -23,7 +12,6 @@ dev:
     - zoxide
     - fzf
     - eza
-    - zellij
     - thefuck
     - tree
     - wget

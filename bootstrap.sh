@@ -38,6 +38,11 @@ echo -e "${GREEN}✓ Detected OS: $OS${NC}"
 echo -e "${GREEN}✓ Default shell: $DEFAULT_SHELL${NC}"
 echo ""
 
+if [[ $EUID -eq 0 ]]; then
+    echo -e "${RED}✗ Script cannot be run as root${NC}"
+    exit 1
+fi
+
 # Check for package manager
 if [[ "$OS" == "macOS" ]]; then
     if ! command -v brew &> /dev/null; then
@@ -47,6 +52,12 @@ if [[ "$OS" == "macOS" ]]; then
         echo -e "${GREEN}✓ Homebrew installed${NC}"
     fi
 elif [[ "$OS" == "Linux" ]]; then
+    if ! command -v sudo &> /dev/null; then
+        echo -e "${RED}✗ Sudo not found${NC}"
+        echo -e "${RED}Please install and configure sudo first${NC}"
+        exit 1
+    fi
+
     PKG_MGR_FOUND=false
     if command -v apt-get &> /dev/null; then
         echo -e "${GREEN}✓ apt package manager found${NC}"

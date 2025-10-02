@@ -12,13 +12,14 @@ source "$SCRIPT_DIR/lib/os-detect.sh"
 
 echo -e "${BLUE}=== Syncing dotfiles ===${NC}"
 
+#TODO: enable Bitwarden on Linux
 # Login to Bitwarden
-echo -e "${BLUE}Logging in to Bitwarden...${NC}"
-bw login
+#echo -e "${BLUE}Logging in to Bitwarden...${NC}"
+#bw login
 
 # Pull secrets for Fabric AI
-chmod +x "$SCRIPT_DIR/lib/shh.sh"
-"$SCRIPT_DIR/lib/shh.sh" -o .config/fabric/.env
+#chmod +x "$SCRIPT_DIR/lib/shh.sh"
+#"$SCRIPT_DIR/lib/shh.sh" -o .config/fabric/.env
 
 # Remove existing shell rc file to prevent conflicts
 if [[ -f "$SHELL_RC" ]]; then

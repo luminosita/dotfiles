@@ -31,7 +31,8 @@ get_package_name() {
     local common_name="$1"
     local pkg_name="$common_name"
 
-    if [[ -n "$PACKAGE_MAPPINGS_FILE" ]] && command -v yq &> /dev/null; then
+    # Only use package mappings if file is set and yq is available
+    if [[ -n "$PACKAGE_MAPPINGS_FILE" ]] && [[ -f "$PACKAGE_MAPPINGS_FILE" ]] && command -v yq &> /dev/null; then
         # Try to get OS-specific package name
         local mapped_name
 
@@ -51,11 +52,12 @@ get_package_name() {
             esac
         fi
 
-        # Use mapped name if found, otherwise use common name
+        # Use mapped name if found and not empty, otherwise use common name
         if [[ -n "$mapped_name" ]]; then
             pkg_name="$mapped_name"
         fi
     fi
+    # If PACKAGE_MAPPINGS_FILE is not set or yq not available, just use common_name
 
     echo "$pkg_name"
 }
@@ -64,25 +66,28 @@ get_package_name() {
 is_package_available() {
     local common_name="$1"
 
-    if [[ -n "$PACKAGE_MAPPINGS_FILE" ]] && command -v yq &> /dev/null; then
-        local platform_key
+    # If no package mappings file, assume package is available
+    if [[ -z "$PACKAGE_MAPPINGS_FILE" ]] || [[ ! -f "$PACKAGE_MAPPINGS_FILE" ]] || ! command -v yq &> /dev/null; then
+        return 0
+    fi
 
-        if [[ "$OS" == "macos" ]]; then
-            platform_key="brew"
-        elif [[ "$OS" == "linux" ]]; then
-            case "$PKG_MGR" in
-                apt) platform_key="apt" ;;
-                dnf|yum) platform_key="dnf" ;;
-                pacman) platform_key="pacman" ;;
-                *) return 1 ;;
-            esac
-        fi
+    local platform_key
 
-        local has_package=$(yq -r ".packages[] | select(.name == \"$common_name\") | .$platform_key // \"skip\"" "$PACKAGE_MAPPINGS_FILE" 2>/dev/null)
+    if [[ "$OS" == "macos" ]]; then
+        platform_key="brew"
+    elif [[ "$OS" == "linux" ]]; then
+        case "$PKG_MGR" in
+            apt) platform_key="apt" ;;
+            dnf|yum) platform_key="dnf" ;;
+            pacman) platform_key="pacman" ;;
+            *) return 0 ;;  # If unknown package manager, assume available
+        esac
+    fi
 
-        if [[ "$has_package" == "skip" ]]; then
-            return 1
-        fi
+    local has_package=$(yq -r ".packages[] | select(.name == \"$common_name\") | .$platform_key // \"skip\"" "$PACKAGE_MAPPINGS_FILE" 2>/dev/null)
+
+    if [[ "$has_package" == "skip" ]]; then
+        return 1
     fi
 
     return 0

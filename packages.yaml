@@ -84,7 +84,7 @@ packages:
 
   - name: yq
     brew: yq
-    apt: skip  # Install from GitHub releases
+    apt: yq
     dnf: skip
     pacman: yq
 
