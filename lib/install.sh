@@ -72,17 +72,6 @@ if [ "$INSTALL_BASE" = true ]; then
     echo -e "${GREEN}✓ Base tools installed${NC}"
     echo ""
 
-    # Install Zinit plugin manager
-    if [[ ! -d "$HOME/.local/share/zinit/zinit.git" ]]; then
-        echo -e "${BLUE}Installing Zinit plugin manager...${NC}"
-        bash -c "$(curl --fail --show-error --silent \
-            --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
-        echo -e "${GREEN}✓ Zinit installed${NC}"
-    else
-        echo -e "${GREEN}✓ Zinit already installed${NC}"
-    fi
-    echo ""
-
     # Install Nerd Fonts
     echo -e "${BLUE}Installing Nerd Fonts...${NC}"
     install_nerd_font "FiraCode"

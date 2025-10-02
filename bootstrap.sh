@@ -104,14 +104,14 @@ else
     exit 1
 fi
 
-# Now use gum for everything from here on
-gum style \
-    --foreground 212 --border-foreground 212 --border double \
-    --align center --width 50 --margin "1 2" --padding "1 2" \
-    'Cross-Platform Dotfiles Bootstrap' 'macOS & Linux Compatible'
-
-gum style --foreground 120 "✓ Detected OS: $OS"
-gum style --foreground 120 "✓ Default shell: $DEFAULT_SHELL"
+# Continue with installation options
+echo ""
+echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
+echo -e "${BLUE}║   Additional Installation Options         ║${NC}"
+echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "${GREEN}✓ Detected OS: $OS${NC}"
+echo -e "${GREEN}✓ Default shell: $DEFAULT_SHELL${NC}"
 echo ""
 
 # Load package lists from config.yaml
@@ -122,12 +122,21 @@ mapfile -t OPTIONAL_CASKS < <(yq -r '.optional.macos_casks[]' "$SCRIPT_DIR/confi
 mapfile -t VSCODE_EXTENSIONS < <(yq -r '.vscode.extensions[]' "$SCRIPT_DIR/config.yaml")
 
 # Prompt for installation options
-gum style --foreground 75 --bold "What would you like to install?"
-choice=$(gum choose \
-    "Full installation (base + dev tools + optional)" \
-    "Base installation only" \
-    "Base + dev tools" \
-    "Custom package selection")
+echo -e "${BLUE}What would you like to install?${NC}"
+echo "1) Full installation (base + dev tools + optional)"
+echo "2) Base installation only"
+echo "3) Base + dev tools"
+echo "4) Custom package selection"
+echo ""
+read -p "Enter your choice [1-4]: " choice_num
+
+case "$choice_num" in
+    1) choice="Full installation (base + dev tools + optional)" ;;
+    2) choice="Base installation only" ;;
+    3) choice="Base + dev tools" ;;
+    4) choice="Custom package selection" ;;
+    *) echo -e "${RED}Invalid choice${NC}"; exit 1 ;;
+esac
 
 case "$choice" in
     "Full installation (base + dev tools + optional)")
@@ -154,19 +163,26 @@ case "$choice" in
     "Custom package selection")
         # Show dev packages and ask
         echo ""
-        gum style --foreground 75 "Development packages:"
-        printf '%s\n' "${DEV_PACKAGES[@]}" | gum format
-        INSTALL_DEV=$(gum confirm "Install all development packages?" && echo true || echo false)
+        echo -e "${BLUE}Development packages:${NC}"
+        printf '%s\n' "${DEV_PACKAGES[@]}"
+        echo ""
+        read -p "Install all development packages? [Y/n]: " install_dev
+        INSTALL_DEV=$([ "$install_dev" != "n" ] && [ "$install_dev" != "N" ] && echo true || echo false)
 
         # Show optional packages and ask
         echo ""
-        gum style --foreground 75 "Optional packages:"
-        printf '%s\n' "${OPTIONAL_PACKAGES[@]}" | gum format
-        INSTALL_OPTIONAL=$(gum confirm "Install all optional packages?" && echo true || echo false)
+        echo -e "${BLUE}Optional packages:${NC}"
+        printf '%s\n' "${OPTIONAL_PACKAGES[@]}"
+        echo ""
+        read -p "Install all optional packages? [Y/n]: " install_opt
+        INSTALL_OPTIONAL=$([ "$install_opt" != "n" ] && [ "$install_opt" != "N" ] && echo true || echo false)
 
         echo ""
-        INSTALL_VSCODE=$(gum confirm "Install Visual Studio Code?" && echo true || echo false)
-        INSTALL_CLAUDE_CODE=$(gum confirm "Install Claude Code?" && echo true || echo false)
+        read -p "Install Visual Studio Code? [Y/n]: " install_vscode
+        INSTALL_VSCODE=$([ "$install_vscode" != "n" ] && [ "$install_vscode" != "N" ] && echo true || echo false)
+
+        read -p "Install Claude Code? [Y/n]: " install_claude
+        INSTALL_CLAUDE_CODE=$([ "$install_claude" != "n" ] && [ "$install_claude" != "N" ] && echo true || echo false)
 
         CUSTOM_PACKAGES=()
         ;;
@@ -175,32 +191,32 @@ esac
 echo ""
 
 # Display installation summary
-gum style --foreground 75 --bold "Installation Summary"
-summary=""
-[ "$INSTALL_VSCODE" = true ] && summary+="✓ Visual Studio Code + extensions\n" || summary+="✗ Visual Studio Code\n"
-[ "$INSTALL_CLAUDE_CODE" = true ] && summary+="✓ Claude Code\n" || summary+="✗ Claude Code\n"
+echo ""
+echo -e "${BLUE}=== Installation Summary ===${NC}"
+[ "$INSTALL_VSCODE" = true ] && echo -e "${GREEN}✓ Visual Studio Code + extensions${NC}" || echo -e "${YELLOW}✗ Visual Studio Code${NC}"
+[ "$INSTALL_CLAUDE_CODE" = true ] && echo -e "${GREEN}✓ Claude Code${NC}" || echo -e "${YELLOW}✗ Claude Code${NC}"
 
 if [ "$INSTALL_DEV" = true ]; then
-    summary+="✓ Dev tools (${DEV_PACKAGES[*]})\n"
+    echo -e "${GREEN}✓ Dev tools (${DEV_PACKAGES[*]})${NC}"
 elif [ "$INSTALL_OPTIONAL" = true ]; then
-    summary+="✓ Optional packages (${OPTIONAL_PACKAGES[*]})"
+    echo -e "${GREEN}✓ Optional packages (${OPTIONAL_PACKAGES[*]})${NC}"
 elif [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
-    summary+="✓ Custom packages (${CUSTOM_PACKAGES[*]})\n"
+    echo -e "${GREEN}✓ Custom packages (${CUSTOM_PACKAGES[*]})${NC}"
 else
-    gum style --foreground 220 "No packages selected. Installation cancelled"
-    exit 0
-fi
-
-echo -e "$summary" | gum format
-echo ""
-
-if ! gum confirm "Proceed with installation?"; then
-    gum style --foreground 220 "Installation cancelled"
+    echo -e "${YELLOW}No packages selected. Installation cancelled${NC}"
     exit 0
 fi
 
 echo ""
-gum spin --spinner dot --title "Starting installation..." -- sleep 1
+read -p "Proceed with installation? [Y/n]: " proceed
+
+if [[ "$proceed" =~ ^[Nn] ]]; then
+    echo -e "${YELLOW}Installation cancelled${NC}"
+    exit 0
+fi
+
+echo ""
+echo -e "${BLUE}Starting installation...${NC}"
 
 # Build combined package list based on selections
 ALL_PACKAGES=()
@@ -230,13 +246,13 @@ INSTALL_ARGS=()
 
 # Run unified installation script
 if [ ${#INSTALL_ARGS[@]} -gt 0 ]; then
-    gum style --foreground 212 "▶ Running installation..."
+    echo -e "${BLUE}▶ Running installation...${NC}"
     bash "$SCRIPT_DIR/lib/install.sh" "${INSTALL_ARGS[@]}"
 fi
 
 # Install macOS casks if any
 if [[ "$OS" == "macOS" ]] && [ ${#ALL_CASKS[@]} -gt 0 ]; then
-    gum style --foreground 212 "▶ Installing macOS applications..."
+    echo -e "${BLUE}▶ Installing macOS applications...${NC}"
 
     # Install Zinit plugin manager
     if [[ ! -d "$HOME/.local/share/zinit/zinit.git" ]]; then
@@ -249,38 +265,38 @@ if [[ "$OS" == "macOS" ]] && [ ${#ALL_CASKS[@]} -gt 0 ]; then
     fi
 
     for cask in "${ALL_CASKS[@]}"; do
-        brew install --cask "$cask" || gum style --foreground 220 "Warning: Failed to install cask $cask"
+        brew install --cask "$cask" || echo -e "${YELLOW}Warning: Failed to install cask $cask${NC}"
     done
 fi
 
 # Install VS Code if selected
 if [[ "$INSTALL_VSCODE" == true ]]; then
     if [[ "$OS" == "macOS" ]]; then
-        gum style --foreground 212 "▶ Installing Visual Studio Code..."
-        brew install --cask visual-studio-code || gum style --foreground 220 "Warning: Failed to install VS Code"
+        echo -e "${BLUE}▶ Installing Visual Studio Code...${NC}"
+        brew install --cask visual-studio-code || echo -e "${YELLOW}Warning: Failed to install VS Code${NC}"
     elif [[ "$OS" == "Linux" ]] && ! command -v code &> /dev/null; then
         # Source os-detect to get package manager
         source "$SCRIPT_DIR/lib/os-detect.sh"
 
         if [[ "$PKG_MGR" == "apt" ]]; then
-            gum style --foreground 212 "▶ Installing Visual Studio Code on Linux..."
+            echo -e "${BLUE}▶ Installing Visual Studio Code on Linux...${NC}"
             wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
             sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
             sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
             rm -f packages.microsoft.gpg
             sudo apt-get update
             sudo apt-get install -y code
-            gum style --foreground 120 "✓ VS Code installed"
+            echo -e "${GREEN}✓ VS Code installed${NC}"
         fi
     fi
 
     # Install VS Code extensions if VS Code is now available
     if command -v code &> /dev/null; then
-        gum style --foreground 212 "▶ Installing VS Code extensions..."
+        echo -e "${BLUE}▶ Installing VS Code extensions...${NC}"
         for ext in "${VSCODE_EXTENSIONS[@]}"; do
             code --install-extension "$ext"
         done
-        gum style --foreground 120 "✓ VS Code extensions installed"
+        echo -e "${GREEN}✓ VS Code extensions installed${NC}"
     fi
 fi
 
@@ -288,10 +304,10 @@ fi
 if [[ "$INSTALL_CLAUDE_CODE" == true ]]; then
     if [[ "$OS" == "macOS" ]]; then
         CLAUDE_CASK=$(yq -r '.claude_code.macos_cask' "$SCRIPT_DIR/config.yaml")
-        gum style --foreground 212 "▶ Installing Claude Code..."
-        brew install --cask "$CLAUDE_CASK" || gum style --foreground 220 "Warning: Failed to install Claude Code"
+        echo -e "${BLUE}▶ Installing Claude Code...${NC}"
+        brew install --cask "$CLAUDE_CASK" || echo -e "${YELLOW}Warning: Failed to install Claude Code${NC}"
     else
-        gum style --foreground 212 "▶ Installing Claude Code..."
+        echo -e "${BLUE}▶ Installing Claude Code...${NC}"
         curl -fsSL https://claude.ai/install.sh | bash -s latest
     fi
 fi
