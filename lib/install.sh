@@ -15,6 +15,7 @@ source "$SCRIPT_DIR/lib/fonts.sh"
 
 # Base packages (hardcoded)
 BASE_PACKAGES=(
+    locale
     yq
     git
     curl
@@ -99,6 +100,12 @@ if [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
     load_package_mappings "$SCRIPT_DIR/packages.yaml"
 
     install_packages "${CUSTOM_PACKAGES[@]}"
+
+    # Special install script required for kubecolor on Linux
+    if [[ "$OS" == "linux" ]] && grep -q "kubecolor" "$SCRIPT_DIR/config.yaml"; then
+        install_kubecolor
+    fi
+
     echo -e "${GREEN}=== Custom Packages Installation complete ===${NC}"
 fi
 

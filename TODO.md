@@ -1,37 +1,43 @@
 ## BUGS:
-- [ ] "command not found" when opening fresh iTerm window
+- [X] "command not found" when opening fresh iTerm window
+- [ ] test symlinks on macOS
+- [ ] test local nix PATH
+- [ ] test bat PATH
+- [ ] LOCALE errors on Linux
+- [ ] podman in starship line in shell
 
 ## TODO:
 - [X] starship
 - [X] nuscripts (farcic)
-- [x] devbox
-- [x] dotfiles, sync (farcic)
-- [x] zellij
-- [x] fabric (env)
-- [x] iterm2
-- [x] cleanup devbox.json and default devbox.json
+- [X] devbox
+- [X] dotfiles, sync (farcic)
+- [ ] zellij on Linux
+- [X] fabric (env)
+- [X] iterm2
+- [X] cleanup devbox.json and default devbox.json
 - [ ] renovate for versions
-- [x] uninstall.sh script
-- [x] VSCode extensions
-- [x] VSCode themes (auto)
+- [X] uninstall.sh script
+- [X] VSCode extensions
+- [X] VSCode themes (auto)
 - [ ] Floccus via Git (bookmark sync)
 - [ ] delete passwords from git history
 - [ ] Remove API_KEYs from fabric config
-- [ ] Installation Wizard gum 
-- [ ] Add to stow ignore all appropriate files
-- [ ] Stow symlinks depending on OS
+- [X] Installation Wizard gum 
+- [X] Add to stow ignore all appropriate files
+- [X] Stow symlinks depending on OS
 - [ ] Podman completion bash and zsh
 ## Devbox
 Global:
-- [x] tor-browser
-- [x] brave ( +extensions)
-- [x] Podman/Docker
-- [x] Wireguard VPN
-- [x] Visual Studio Code
+- [X] tor-browser
+- [X] brave ( +extensions)
+- [X] Podman/Docker
+- [X] Wireguard VPN
+- [X] Visual Studio Code
 
 Shell:
-- [x] cleanup gloud projects
-- [x] bitwarden cli
-- [x] gh cli
+- [X] cleanup gloud projects
+- [ ] bitwarden cli
+- [ ] kubecolor special install script
+- [X] gh cli
 - [ ] torsocks
-- [x] GitHub SSH key (insecure)
+- [X] GitHub SSH key (insecure)

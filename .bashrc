@@ -22,6 +22,25 @@ if ! shopt -oq posix; then
     fi
 fi
 
+# Bat CLI Linux hack: apt installs bat as batcat
+if command -v batcat &> /dev/null; then
+    mkdir -p ~/.local/bin
+    ln -s /usr/bin/batcat ~/.local/bin/bat
+fi
+
+# Enable en_US locale
+if grep -q "^# en_US.UTF-8 UTF-8" /etc/locale.gen; then
+    sudo sed -i 's/^# \(en_US\.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+    sudo locale-gen
+    echo "✓ Locale enabled"
+elif ! grep -q "^en_US.UTF-8 UTF-8" /etc/locale.gen; then
+    echo "en_US.UTF-8 UTF-8" | sudo tee -a /etc/locale.gen
+    sudo locale-gen
+    echo "✓ Locale added"
+else
+    echo "✓ Locale already enabled"
+fi
+
 # Load common shell configuration
 if [[ -f "$HOME/.config/shell/common.sh" ]]; then
     source "$HOME/.config/shell/common.sh"

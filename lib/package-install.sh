@@ -224,3 +224,17 @@ install_if_missing() {
         install_package "$pkg"
     fi
 }
+
+install_kubecolor() {
+    if command -v apt-get &> /dev/null; then
+        echo -e "${BLUE}=== Kubecolor Installation ===${NC}"
+        sudo apt-get update
+        sudo apt-get install apt-transport-https wget --yes
+        wget -O /tmp/kubecolor.deb https://kubecolor.github.io/packages/deb/pool/main/k/kubecolor/kubecolor_$(wget -q -O- https://kubecolor.github.io/packages/deb/version)_$(dpkg --print-architecture).deb
+        sudo dpkg -i /tmp/kubecolor.deb
+        sudo apt update
+        echo -e "${GREEN}=== Kubecolor Installation complete ===${NC}"
+    else
+        echo -e "${RED}✗ Kubecolor can be installed only via apt package manager${NC}"
+    fi
+}
