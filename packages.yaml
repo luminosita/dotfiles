@@ -162,12 +162,24 @@ packages:
     dnf: skip
     pacman: sublime-text-dev
 
-  # Fonts (handled separately via fonts.sh)
+  # Fonts and compression utilities
   - name: fontconfig
     brew: skip
     apt: fontconfig
     dnf: fontconfig
     pacman: fontconfig
+
+  - name: xz-utils
+    brew: xz
+    apt: xz-utils
+    dnf: xz
+    pacman: xz
+
+  - name: gnupg
+    brew: gnupg
+    apt: gnupg
+    dnf: gnupg2
+    pacman: gnupg
 
 # macOS-only casks (GUI applications)
 # These are handled separately and skipped on Linux

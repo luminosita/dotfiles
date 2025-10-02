@@ -40,39 +40,11 @@ echo -e "${GREEN}✓ Detected OS: $OS${NC}"
 echo -e "${GREEN}✓ Default shell: $DEFAULT_SHELL${NC}"
 echo ""
 
-# Check for required dependencies
-echo -e "${BLUE}=== Checking Requirements ===${NC}"
-MISSING_DEPS=()
-
-# Check for curl
-if ! command -v curl &> /dev/null; then
-    echo -e "${YELLOW}✗ curl not found${NC}"
-    MISSING_DEPS+=("curl")
-else
-    echo -e "${GREEN}✓ curl installed${NC}"
-fi
-
-# Check for gum
-if ! command -v gum &> /dev/null; then
-    echo -e "${YELLOW}✗ gum not found${NC}"
-    MISSING_DEPS+=("gum")
-else
-    echo -e "${GREEN}✓ gum installed${NC}"
-fi
-
-# Check for yq
-if ! command -v yq &> /dev/null; then
-    echo -e "${YELLOW}✗ yq not found${NC}"
-    MISSING_DEPS+=("yq")
-else
-    echo -e "${GREEN}✓ yq installed${NC}"
-fi
-
 # Check for package manager
 if [[ "$OS" == "macOS" ]]; then
     if ! command -v brew &> /dev/null; then
         echo -e "${YELLOW}✗ Homebrew not found${NC}"
-        MISSING_DEPS+=("brew")
+        MISSING_BREW=true
     else
         echo -e "${GREEN}✓ Homebrew installed${NC}"
     fi
@@ -97,102 +69,39 @@ elif [[ "$OS" == "Linux" ]]; then
 fi
 
 # Install missing dependencies if needed
-if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
-    echo ""
-    echo -e "${YELLOW}Missing required dependencies: ${MISSING_DEPS[*]}${NC}"
-    echo ""
-    read -p "Install missing dependencies now? [Y/n]: " install_deps
+if [ "$MISSING_BREW" = true ]; then
+    echo -e "${BLUE}Installing Homebrew (local user installation)...${NC}"
 
-    if [[ ! "$install_deps" =~ ^[Nn] ]]; then
-        for dep in "${MISSING_DEPS[@]}"; do
-            case "$dep" in
-                curl)
-                    echo -e "${BLUE}Installing curl...${NC}"
-                    if [[ "$OS" == "macOS" ]]; then
-                        # curl should be pre-installed on macOS
-                        echo -e "${RED}Error: curl is missing on macOS (should be pre-installed)${NC}"
-                        exit 1
-                    elif [[ "$OS" == "Linux" ]]; then
-                        if command -v apt-get &> /dev/null; then
-                            sudo apt-get update && sudo apt-get install -y curl
-                        elif command -v dnf &> /dev/null; then
-                            sudo dnf install -y curl
-                        elif command -v pacman &> /dev/null; then
-                            sudo pacman -S --noconfirm curl
-                        fi
-                    fi
-                    echo -e "${GREEN}✓ curl installed${NC}"
-                    ;;
-                brew)
-                    echo -e "${BLUE}Installing Homebrew (local user installation)...${NC}"
+    # Install Homebrew locally in ~/homebrew
+    mkdir -p ~/homebrew
+    curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C ~/homebrew
 
-                    # Install Homebrew locally in ~/homebrew
-                    mkdir -p ~/homebrew
-                    curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C ~/homebrew
+    # Add Homebrew to PATH for this session
+    export PATH="$HOME/homebrew/bin:$PATH"
+    export MANPATH="$HOME/homebrew/share/man:$MANPATH"
+    export INFOPATH="$HOME/homebrew/share/info:$INFOPATH"
+    export HOMEBREW_PREFIX="$HOME/homebrew"
+    export HOMEBREW_REPOSITORY="$HOME/homebrew"
+    export HOMEBREW_CACHE="$HOME/.cache/homebrew"
+    export HOMEBREW_TEMP="$HOME/tmp/homebrew"
+    export HOMEBREW_LOGS="$HOME/.cache/homebrew/Logs"
 
-                    # Add Homebrew to PATH for this session
-                    export PATH="$HOME/homebrew/bin:$PATH"
-                    export MANPATH="$HOME/homebrew/share/man:$MANPATH"
-                    export INFOPATH="$HOME/homebrew/share/info:$INFOPATH"
-                    export HOMEBREW_PREFIX="$HOME/homebrew"
-                    export HOMEBREW_REPOSITORY="$HOME/homebrew"
-                    export HOMEBREW_CACHE="$HOME/.cache/homebrew"
-                    export HOMEBREW_TEMP="$HOME/tmp/homebrew"
-                    export HOMEBREW_LOGS="$HOME/.cache/homebrew/Logs"
+    mkdir -p "$HOMEBREW_CACHE" "$HOMEBREW_TEMP" "$HOMEBREW_LOGS"
+    brew analytics off
 
-                    mkdir -p "$HOMEBREW_CACHE" "$HOMEBREW_TEMP" "$HOMEBREW_LOGS"
-                    brew analytics off
+    echo -e "${GREEN}✓ Homebrew installed (local user installation in ~/homebrew)${NC}"
+fi
 
-                    echo -e "${GREEN}✓ Homebrew installed (local user installation in ~/homebrew)${NC}"
-                    ;;
-                yq)
-                    echo -e "${BLUE}Installing yq...${NC}"
-                    if [[ "$OS" == "macOS" ]]; then
-                        brew install yq
-                    elif [[ "$OS" == "Linux" ]]; then
-                        if command -v apt-get &> /dev/null; then
-                            sudo apt-get update && sudo apt-get install -y yq
-                        elif command -v dnf &> /dev/null; then
-                            sudo dnf install -y yq
-                        elif command -v pacman &> /dev/null; then
-                            sudo pacman -S --noconfirm yq
-                        fi
-                    fi
-                    echo -e "${GREEN}✓ yq installed${NC}"
-                    ;;
-                gum)
-                    echo -e "${BLUE}Installing gum...${NC}"
-                    if [[ "$OS" == "macOS" ]]; then
-                        brew install gum
-                    elif [[ "$OS" == "Linux" ]]; then
-                        if command -v apt-get &> /dev/null; then
-                            sudo mkdir -p /etc/apt/keyrings
-                            curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
-                            echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
-                            sudo apt-get update && sudo apt-get install -y gum
-                        elif command -v dnf &> /dev/null; then
-                            echo '[charm]
-name=Charm
-baseurl=https://repo.charm.sh/yum/
-enabled=1
-gpgcheck=1
-gpgkey=https://repo.charm.sh/yum/gpg.key' | sudo tee /etc/yum.repos.d/charm.repo
-                            sudo dnf install -y gum
-                        elif command -v pacman &> /dev/null; then
-                            sudo pacman -S --noconfirm gum
-                        fi
-                    fi
-                    echo -e "${GREEN}✓ gum installed${NC}"
-                    ;;
-            esac
-        done
-        echo ""
-        echo -e "${GREEN}All dependencies installed!${NC}"
-        echo ""
-    else
-        echo -e "${RED}Cannot proceed without required dependencies${NC}"
-        exit 1
-    fi
+echo ""
+echo -e "${BLUE}Base Packages Installation${NC}"
+echo ""
+read -p "Install base packages now? [Y/n]: " install_deps
+
+if [[ ! "$install_deps" =~ ^[Nn] ]]; then
+    bash "$SCRIPT_DIR/lib/install.sh" "--base"
+else
+    echo -e "${RED}Cannot proceed without required packages${NC}"
+    exit 1
 fi
 
 # Now use gum for everything from here on
@@ -206,7 +115,6 @@ gum style --foreground 120 "✓ Default shell: $DEFAULT_SHELL"
 echo ""
 
 # Load package lists from config.yaml
-mapfile -t BASE_PACKAGES < <(yq -r '.base.packages[]' "$SCRIPT_DIR/config.yaml")
 mapfile -t DEV_PACKAGES < <(yq -r '.dev.packages[]' "$SCRIPT_DIR/config.yaml")
 mapfile -t OPTIONAL_PACKAGES < <(yq -r '.optional.packages[]' "$SCRIPT_DIR/config.yaml")
 mapfile -t DEV_CASKS < <(yq -r '.dev.macos_casks[]' "$SCRIPT_DIR/config.yaml")
@@ -223,7 +131,6 @@ choice=$(gum choose \
 
 case "$choice" in
     "Full installation (base + dev tools + optional)")
-        INSTALL_BASE=true
         INSTALL_DEV=true
         INSTALL_OPTIONAL=true
         INSTALL_VSCODE=true
@@ -231,7 +138,6 @@ case "$choice" in
         CUSTOM_PACKAGES=()
         ;;
     "Base installation only")
-        INSTALL_BASE=true
         INSTALL_DEV=false
         INSTALL_OPTIONAL=false
         INSTALL_VSCODE=false
@@ -239,7 +145,6 @@ case "$choice" in
         CUSTOM_PACKAGES=()
         ;;
     "Base + dev tools")
-        INSTALL_BASE=true
         INSTALL_DEV=true
         INSTALL_OPTIONAL=false
         INSTALL_VSCODE=true
@@ -247,12 +152,6 @@ case "$choice" in
         CUSTOM_PACKAGES=()
         ;;
     "Custom package selection")
-        # Show base packages and ask
-        gum style --foreground 75 "Base packages:"
-        printf '%s\n' "${BASE_PACKAGES[@]}" | gum format
-        echo ""
-        INSTALL_BASE=$(gum confirm "Install base tools (fonts, zinit, nix + packages above)?" && echo true || echo false)
-
         # Show dev packages and ask
         echo ""
         gum style --foreground 75 "Development packages:"
@@ -278,7 +177,6 @@ echo ""
 # Display installation summary
 gum style --foreground 75 --bold "Installation Summary"
 summary=""
-[ "$INSTALL_BASE" = true ] && summary+="✓ Base installation (fonts, zinit, nix, ${BASE_PACKAGES[*]})\n" || summary+="✗ Base installation\n"
 [ "$INSTALL_VSCODE" = true ] && summary+="✓ Visual Studio Code + extensions\n" || summary+="✗ Visual Studio Code\n"
 [ "$INSTALL_CLAUDE_CODE" = true ] && summary+="✓ Claude Code\n" || summary+="✗ Claude Code\n"
 
@@ -328,7 +226,6 @@ fi
 
 # Build install.sh arguments
 INSTALL_ARGS=()
-[ "$INSTALL_BASE" = true ] && INSTALL_ARGS+=("--base")
 [ ${#ALL_PACKAGES[@]} -gt 0 ] && INSTALL_ARGS+=("--packages" "${ALL_PACKAGES[@]}")
 
 # Run unified installation script
@@ -340,6 +237,17 @@ fi
 # Install macOS casks if any
 if [[ "$OS" == "macOS" ]] && [ ${#ALL_CASKS[@]} -gt 0 ]; then
     gum style --foreground 212 "▶ Installing macOS applications..."
+
+    # Install Zinit plugin manager
+    if [[ ! -d "$HOME/.local/share/zinit/zinit.git" ]]; then
+        echo -e "${BLUE}Installing Zinit plugin manager...${NC}"
+        bash -c "$(curl --fail --show-error --silent \
+            --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
+        echo -e "${GREEN}✓ Zinit installed${NC}"
+    else
+        echo -e "${GREEN}✓ Zinit already installed${NC}"
+    fi
+
     for cask in "${ALL_CASKS[@]}"; do
         brew install --cask "$cask" || gum style --foreground 220 "Warning: Failed to install cask $cask"
     done

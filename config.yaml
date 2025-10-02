@@ -4,13 +4,18 @@
 # Base system packages (always recommended)
 base:
   packages:
+    - yq
+    - gum
     - git
     - stow
-    - bitwarden-cli
+    - xz-utils
+    - fontconfig
+    - gnupg
 
 # Development tools (CLI)
 dev:
   packages:
+    - bitwarden-cli
     - gh
     - kubectl
     - starship
