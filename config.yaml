@@ -1,0 +1,64 @@
+# Dotfiles Installation Configuration
+# Define all available packages, casks, and extensions
+
+# Base system packages (always recommended)
+base:
+  packages:
+    - git
+    - stow
+    - bitwarden-cli
+
+# Development tools (CLI)
+dev:
+  packages:
+    - gh
+    - kubectl
+    - starship
+    - bat
+    - zoxide
+    - fzf
+    - eza
+    - zellij
+    - thefuck
+    - tree
+    - wget
+    - podman
+    - yt-dlp
+    - fabric-ai
+    - kubecolor
+
+  # macOS GUI applications (casks)
+  macos_casks:
+    - sublime-text
+    - iterm2
+    - tor-browser
+    - brave-browser
+
+# Claude Code configuration
+claude_code:
+  macos_cask: claude-code
+
+# Optional packages
+optional:
+  packages:
+    - vlc
+    - transmission
+    - midnight-commander
+
+  # macOS GUI applications (casks)
+  macos_casks:
+    - commander-one
+    - plex-media-server
+    - caffeine
+    - balenaetcher
+    - resilio-sync
+    - signal
+    - virtualbox
+    - torguard
+
+# Visual Studio Code configuration
+vscode:
+  extensions:
+    - shd101wyy.markdown-preview-enhanced
+    - mhutchie.git-graph
+    - gruntfuggly.todo-tree

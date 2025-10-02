@@ -1,0 +1,188 @@
+# Package name mappings for cross-platform installation
+# Format: common name with platform-specific package names
+# Use "skip" to skip installation on specific platforms
+
+packages:
+  # CLI tools
+  - name: gh
+    brew: gh
+    apt: gh
+    dnf: gh
+    pacman: github-cli
+
+  - name: kubectl
+    brew: kubectl
+    apt: kubectl
+    dnf: kubernetes-client
+    pacman: kubectl
+
+  - name: kubecolor
+    brew: kubecolor
+    apt: skip  # Not in default repos, install manually
+    dnf: skip
+    pacman: kubecolor
+
+  - name: starship
+    brew: starship
+    apt: starship
+    dnf: starship
+    pacman: starship
+
+  - name: bat
+    brew: bat
+    apt: bat
+    dnf: bat
+    pacman: bat
+
+  - name: zoxide
+    brew: zoxide
+    apt: zoxide
+    dnf: zoxide
+    pacman: zoxide
+
+  - name: fzf
+    brew: fzf
+    apt: fzf
+    dnf: fzf
+    pacman: fzf
+
+  - name: eza
+    brew: eza
+    apt: eza
+    dnf: eza
+    pacman: eza
+
+  - name: zellij
+    brew: zellij
+    apt: zellij
+    dnf: skip
+    pacman: zellij
+
+  - name: thefuck
+    brew: thefuck
+    apt: thefuck
+    dnf: thefuck
+    pacman: thefuck
+
+  - name: tree
+    brew: tree
+    apt: tree
+    dnf: tree
+    pacman: tree
+
+  - name: wget
+    brew: wget
+    apt: wget
+    dnf: wget
+    pacman: wget
+
+  - name: jq
+    brew: jq
+    apt: jq
+    dnf: jq
+    pacman: jq
+
+  - name: yq
+    brew: yq
+    apt: skip  # Install from GitHub releases
+    dnf: skip
+    pacman: yq
+
+  - name: git
+    brew: git
+    apt: git
+    dnf: git
+    pacman: git
+
+  - name: curl
+    brew: curl
+    apt: curl
+    dnf: curl
+    pacman: curl
+
+  - name: stow
+    brew: stow
+    apt: stow
+    dnf: stow
+    pacman: stow
+
+  - name: podman
+    brew: podman
+    apt: podman
+    dnf: podman
+    pacman: podman
+
+  - name: yt-dlp
+    brew: yt-dlp
+    apt: yt-dlp
+    dnf: yt-dlp
+    pacman: yt-dlp
+
+  - name: fabric-ai
+    brew: fabric-ai
+    apt: skip  # Not available in default repos
+    dnf: skip
+    pacman: skip
+
+  - name: bitwarden-cli
+    brew: bitwarden-cli
+    apt: skip  # Install from snap or npm
+    dnf: skip
+    pacman: bitwarden-cli
+
+  # Media tools
+  - name: vlc
+    brew: vlc
+    apt: vlc
+    dnf: vlc
+    pacman: vlc
+
+  - name: transmission
+    brew: transmission
+    apt: transmission
+    dnf: transmission
+    pacman: transmission
+
+  - name: midnight-commander
+    brew: midnight-commander
+    apt: mc
+    dnf: mc
+    pacman: mc
+
+  # Development tools (available on Linux via package managers)
+  - name: code
+    brew: skip  # Use cask visual-studio-code on macOS
+    apt: code
+    dnf: code
+    pacman: code
+
+  - name: sublime-text
+    brew: skip  # Use cask on macOS
+    apt: sublime-text
+    dnf: skip
+    pacman: sublime-text-dev
+
+  # Fonts (handled separately via fonts.sh)
+  - name: fontconfig
+    brew: skip
+    apt: fontconfig
+    dnf: fontconfig
+    pacman: fontconfig
+
+# macOS-only casks (GUI applications)
+# These are handled separately and skipped on Linux
+macos_casks:
+  - visual-studio-code
+  - tor-browser
+  - brave-browser
+  - claude-code
+  - sublime-text
+  - iterm2
+  - commander-one
+  - plex-media-server
+  - caffeine
+  - balenaetcher
+  - resilio-sync
+  - signal
+  - virtualbox
+  - torguard

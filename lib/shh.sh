@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
 # shh.sh - Modular secret retrieval environment loader
 # Supports: .env files, Bitwarden, AWS, GCP, HashiCorp Vault, Azure Key Vault, and more

@@ -1,48 +1,13 @@
+# Zsh configuration - primarily for macOS
+# For cross-platform compatibility, common settings are in .config/shell/common.sh
+
 autoload -Uz compinit
 compinit
 
+# Zsh-specific options
 setopt HIST_IGNORE_ALL_DUPS
-
-# PATH setup
-export PATH="$HOME/go/bin:$PATH"
-export PATH="/usr/local/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-
-# Local Homebrew
-export PATH="$HOME/homebrew/bin:$PATH"
-export MANPATH="$HOME/homebrew/share/man:$MANPATH"
-export INFOPATH="$HOME/homebrew/share/info:$INFOPATH"
-export HOMEBREW_PREFIX="$HOME/homebrew"
-export HOMEBREW_REPOSITORY="$HOME/homebrew"
-export HOMEBREW_CACHE="$HOME/.cache/homebrew"
-export HOMEBREW_TEMP="$HOME/tmp/homebrew"
-export HOMEBREW_LOGS="$HOME/.cache/homebrew/Logs"
-#export HOMEBREW_BOTTLE_DOMAIN=""  # Optional: avoid shared precompiled binaries
-
-# Devbox
-# DEVBOX_NO_PROMPT=true
-# eval "$(devbox global shellenv --preserve-path-stack -r)" && hash -r
-# eval "$(devbox global shellenv --init-hook)"
-
-# Git
-LANG=en_US.UTF-8
-
-# Completions
-#source <(devbox completion zsh)
-#source <(docker completion zsh)
-source <(kubectl completion zsh)
-
-# Starship
-eval "$(starship init zsh)"
-
-# The Fuck
-eval $(thefuck --alias)
-
-# Zoxide
-eval "$(zoxide init --cmd cd zsh)"
-
-# kubecolor
-compdef kubecolor=kubectl
+setopt SHARE_HISTORY
+setopt EXTENDED_HISTORY
 
 ### Added by Zinit's installer
 if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
@@ -67,18 +32,17 @@ zinit light-mode for \
 
 ### End of Zinit's installer chunk
 
-# Zsh plugins
+# Zsh-specific plugins
 zinit light zsh-users/zsh-autosuggestions
 zinit light zsh-users/zsh-history-substring-search
 zinit light zsh-users/zsh-syntax-highlighting
+
+# Zsh-specific key bindings
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 zstyle ':completion:*' menu yes select
 
-# Aliases
-alias lsa='eza --long --all --no-permissions --no-filesize --no-user --no-time --git'
-alias lst='eza --long --all --no-permissions --no-filesize --no-user --git --sort modified'
-alias fzfp='fzf --preview \"bat --style numbers --color always {}\"'
-alias cat='bat --paging never --theme-dark DarkNeon --theme-light GitHub --style changes,header-filename,snip'
-alias kubectl='kubecolor'
-alias nixd='NIXPKGS_ALLOW_UNFREE=1 nix develop --impure'
+# Load common shell configuration (shared with bash)
+if [[ -f "$HOME/.config/shell/common.sh" ]]; then
+    source "$HOME/.config/shell/common.sh"
+fi

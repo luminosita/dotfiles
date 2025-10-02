@@ -17,7 +17,10 @@
 - [ ] Floccus via Git (bookmark sync)
 - [ ] delete passwords from git history
 - [ ] Remove API_KEYs from fabric config
-
+- [ ] Installation Wizard gum 
+- [ ] Add to stow ignore all appropriate files
+- [ ] Stow symlinks depending on OS
+- [ ] Podman completion bash and zsh
 ## Devbox
 Global:
 - [x] tor-browser
