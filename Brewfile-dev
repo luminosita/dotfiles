@@ -3,6 +3,9 @@ cask "visual-studio-code"
 cask "tor-browser"
 cask "brave-browser"
 
+brew "podman"
+cask "claude-code"
+
 cask "sublime-text"
 cask "iterm2"
 brew "yt-dlp"
