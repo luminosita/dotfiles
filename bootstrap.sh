@@ -206,6 +206,7 @@ gum style --foreground 120 "✓ Default shell: $DEFAULT_SHELL"
 echo ""
 
 # Load package lists from config.yaml
+mapfile -t BASE_PACKAGES < <(yq -r '.base.packages[]' "$SCRIPT_DIR/config.yaml")
 mapfile -t DEV_PACKAGES < <(yq -r '.dev.packages[]' "$SCRIPT_DIR/config.yaml")
 mapfile -t OPTIONAL_PACKAGES < <(yq -r '.optional.packages[]' "$SCRIPT_DIR/config.yaml")
 mapfile -t DEV_CASKS < <(yq -r '.dev.macos_casks[]' "$SCRIPT_DIR/config.yaml")
@@ -246,33 +247,29 @@ case "$choice" in
         CUSTOM_PACKAGES=()
         ;;
     "Custom package selection")
-        INSTALL_BASE=$(gum confirm "Install base tools (fonts, zinit, nix, git, stow)?" && echo true || echo false)
+        # Show base packages and ask
+        gum style --foreground 75 "Base packages:"
+        printf '%s\n' "${BASE_PACKAGES[@]}" | gum format
+        echo ""
+        INSTALL_BASE=$(gum confirm "Install base tools (fonts, zinit, nix + packages above)?" && echo true || echo false)
+
+        # Show dev packages and ask
+        echo ""
+        gum style --foreground 75 "Development packages:"
+        printf '%s\n' "${DEV_PACKAGES[@]}" | gum format
+        INSTALL_DEV=$(gum confirm "Install all development packages?" && echo true || echo false)
+
+        # Show optional packages and ask
+        echo ""
+        gum style --foreground 75 "Optional packages:"
+        printf '%s\n' "${OPTIONAL_PACKAGES[@]}" | gum format
+        INSTALL_OPTIONAL=$(gum confirm "Install all optional packages?" && echo true || echo false)
+
+        echo ""
         INSTALL_VSCODE=$(gum confirm "Install Visual Studio Code?" && echo true || echo false)
         INSTALL_CLAUDE_CODE=$(gum confirm "Install Claude Code?" && echo true || echo false)
 
-        # Let user select from dev packages
-        gum style --foreground 75 "Select development tools to install (space to select, enter to confirm):"
-        SELECTED_DEV=$(gum choose --no-limit "${DEV_PACKAGES[@]}")
-
-        # Let user select from optional packages
-        gum style --foreground 75 "Select optional packages to install (space to select, enter to confirm):"
-        SELECTED_OPT=$(gum choose --no-limit "${OPTIONAL_PACKAGES[@]}")
-
-        # Combine selections
         CUSTOM_PACKAGES=()
-        if [[ -n "$SELECTED_DEV" ]]; then
-            while IFS= read -r pkg; do
-                CUSTOM_PACKAGES+=("$pkg")
-            done <<< "$SELECTED_DEV"
-        fi
-        if [[ -n "$SELECTED_OPT" ]]; then
-            while IFS= read -r pkg; do
-                CUSTOM_PACKAGES+=("$pkg")
-            done <<< "$SELECTED_OPT"
-        fi
-
-        INSTALL_DEV=false
-        INSTALL_OPTIONAL=false
         ;;
 esac
 
@@ -281,7 +278,7 @@ echo ""
 # Display installation summary
 gum style --foreground 75 --bold "Installation Summary"
 summary=""
-[ "$INSTALL_BASE" = true ] && summary+="✓ Base installation (fonts, zinit, nix, git, stow, bitwarden-cli)\n" || summary+="✗ Base installation\n"
+[ "$INSTALL_BASE" = true ] && summary+="✓ Base installation (fonts, zinit, nix, ${BASE_PACKAGES[*]})\n" || summary+="✗ Base installation\n"
 [ "$INSTALL_VSCODE" = true ] && summary+="✓ Visual Studio Code + extensions\n" || summary+="✗ Visual Studio Code\n"
 [ "$INSTALL_CLAUDE_CODE" = true ] && summary+="✓ Claude Code\n" || summary+="✗ Claude Code\n"
 

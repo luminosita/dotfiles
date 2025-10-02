@@ -83,15 +83,9 @@ if [ "$INSTALL_BASE" = true ]; then
     # Install base tools from config.yaml
     echo -e "${BLUE}Installing base tools...${NC}"
 
-    # Check if yq is available
-    if command -v yq &> /dev/null; then
-        # Load base packages from config.yaml
-        mapfile -t BASE_PACKAGES < <(yq -r '.base.packages[]' "$SCRIPT_DIR/config.yaml")
-        install_packages "${BASE_PACKAGES[@]}"
-    else
-        # Fallback to hardcoded list if yq not available
-        install_packages git curl stow bitwarden-cli
-    fi
+    # Load base packages from config.yaml
+    mapfile -t BASE_PACKAGES < <(yq -r '.base.packages[]' "$SCRIPT_DIR/config.yaml")
+    install_packages "${BASE_PACKAGES[@]}"
 fi
 
 # Custom packages installation

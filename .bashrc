@@ -22,20 +22,6 @@ if ! shopt -oq posix; then
     fi
 fi
 
-# Zinit plugin manager for bash
-ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-if [[ ! -d $ZINIT_HOME ]]; then
-    mkdir -p "$(dirname $ZINIT_HOME)"
-    git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
-fi
-
-source "${ZINIT_HOME}/zinit.zsh"
-
-# Load bash plugins via zinit
-zinit light zdharma-continuum/fast-syntax-highlighting
-zinit light zsh-users/zsh-autosuggestions
-zinit light zsh-users/zsh-history-substring-search
-
 # Load common shell configuration
 if [[ -f "$HOME/.config/shell/common.sh" ]]; then
     source "$HOME/.config/shell/common.sh"
