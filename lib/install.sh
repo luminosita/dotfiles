@@ -13,6 +13,16 @@ source "$SCRIPT_DIR/lib/os-detect.sh"
 source "$SCRIPT_DIR/lib/package-install.sh"
 source "$SCRIPT_DIR/lib/fonts.sh"
 
+# Base packages (hardcoded)
+BASE_PACKAGES=(
+    git
+    curl
+    stow
+    xz-utils
+    fontconfig
+    gnupg
+)
+
 # Parse arguments
 INSTALL_BASE=false
 CUSTOM_PACKAGES=()
@@ -56,9 +66,27 @@ fi
 if [ "$INSTALL_BASE" = true ]; then
     echo -e "${BLUE}=== Base Installation ===${NC}"
 
+    # Install base tools FIRST (needed for fonts and other steps)
+    echo -e "${BLUE}Installing base tools...${NC}"
+    install_packages "${BASE_PACKAGES[@]}"
+    echo -e "${GREEN}✓ Base tools installed${NC}"
+    echo ""
+
+    # Install Zinit plugin manager
+    if [[ ! -d "$HOME/.local/share/zinit/zinit.git" ]]; then
+        echo -e "${BLUE}Installing Zinit plugin manager...${NC}"
+        bash -c "$(curl --fail --show-error --silent \
+            --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
+        echo -e "${GREEN}✓ Zinit installed${NC}"
+    else
+        echo -e "${GREEN}✓ Zinit already installed${NC}"
+    fi
+    echo ""
+
     # Install Nerd Fonts
     echo -e "${BLUE}Installing Nerd Fonts...${NC}"
     install_nerd_font "FiraCode"
+    echo ""
 
     # Install Nix (single-user install, cross-platform)
     if ! command -v nix &> /dev/null; then
@@ -70,13 +98,7 @@ if [ "$INSTALL_BASE" = true ]; then
         echo -e "${GREEN}✓ Nix already installed${NC}"
     fi
 
-    # Install base tools from config.yaml
-    echo -e "${BLUE}Installing base tools...${NC}"
-
-    # Load base packages from config.yaml
-    mapfile -t BASE_PACKAGES < <(yq -r '.base.packages[]' "$SCRIPT_DIR/config.yaml")
-    install_packages "${BASE_PACKAGES[@]}"
-
+    echo ""
     echo -e "${GREEN}=== Base installation complete ===${NC}"
 fi
 

@@ -4,7 +4,7 @@
 
 set -e
 
-# Colors (for initial setup before gum is available)
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -14,7 +14,7 @@ NC='\033[0m'
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Initial header (before gum)
+# Header
 echo -e "${BLUE}"
 echo "╔════════════════════════════════════════════╗"
 echo "║   Cross-Platform Dotfiles Bootstrap       ║"
@@ -26,11 +26,9 @@ echo -e "${NC}"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     OS="macOS"
     DEFAULT_SHELL="zsh"
-    REQUIRED_PKG_MGR="brew"
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     OS="Linux"
     DEFAULT_SHELL="bash"
-    REQUIRED_PKG_MGR="apt/dnf/pacman"
 else
     echo -e "${RED}Error: Unsupported operating system${NC}"
     exit 1
@@ -68,8 +66,9 @@ elif [[ "$OS" == "Linux" ]]; then
     fi
 fi
 
-# Install missing dependencies if needed
+# Install Homebrew if needed on macOS
 if [ "$MISSING_BREW" = true ]; then
+    echo ""
     echo -e "${BLUE}Installing Homebrew (local user installation)...${NC}"
 
     # Install Homebrew locally in ~/homebrew
@@ -93,12 +92,13 @@ if [ "$MISSING_BREW" = true ]; then
 fi
 
 echo ""
-echo -e "${BLUE}Base Packages Installation${NC}"
+echo -e "${BLUE}=== Base Installation ===${NC}"
+echo -e "${YELLOW}This will install: fonts, zinit, nix, git, curl, stow, xz-utils, fontconfig, gnupg${NC}"
 echo ""
-read -p "Install base packages now? [Y/n]: " install_deps
+read -p "Install base packages now? [Y/n]: " install_base
 
-if [[ ! "$install_deps" =~ ^[Nn] ]]; then
-    bash "$SCRIPT_DIR/lib/install.sh" "--base"
+if [[ ! "$install_base" =~ ^[Nn] ]]; then
+    bash "$SCRIPT_DIR/lib/install.sh" --base
 else
     echo -e "${RED}Cannot proceed without required packages${NC}"
     exit 1
@@ -298,56 +298,56 @@ fi
 
 # Ask about sync
 echo ""
-if gum confirm "Configure git and sync dotfiles now?"; then
+echo -e "${BLUE}=== Git Configuration ===${NC}"
+read -p "Configure git and sync dotfiles now? [Y/n]: " sync_now
+
+if [[ ! "$sync_now" =~ ^[Nn] ]]; then
     bash "$SCRIPT_DIR/lib/sync.sh"
 fi
 
 # Ask about default shell
 echo ""
-gum style --foreground 75 --bold "Shell Configuration"
+echo -e "${BLUE}=== Shell Configuration ===${NC}"
 
 if [[ "$OS" == "macOS" ]]; then
     current_shell=$(dscl . -read ~/ UserShell | sed 's/UserShell: //')
     if [[ "$current_shell" != *"zsh"* ]]; then
-        if gum confirm "Set zsh as default shell?"; then
+        read -p "Set zsh as default shell? [Y/n]: " set_shell
+        if [[ ! "$set_shell" =~ ^[Nn] ]]; then
             chsh -s $(which zsh)
-            gum style --foreground 120 "✓ Default shell set to zsh"
+            echo -e "${GREEN}✓ Default shell set to zsh${NC}"
         fi
     else
-        gum style --foreground 120 "✓ zsh is already the default shell"
+        echo -e "${GREEN}✓ zsh is already the default shell${NC}"
     fi
 elif [[ "$OS" == "Linux" ]]; then
     current_shell=$(getent passwd $USER | cut -d: -f7)
     if [[ "$current_shell" != *"bash"* ]]; then
-        if gum confirm "Set bash as default shell?"; then
+        read -p "Set bash as default shell? [Y/n]: " set_shell
+        if [[ ! "$set_shell" =~ ^[Nn] ]]; then
             chsh -s $(which bash)
-            gum style --foreground 120 "✓ Default shell set to bash"
+            echo -e "${GREEN}✓ Default shell set to bash${NC}"
         fi
     else
-        gum style --foreground 120 "✓ bash is already the default shell"
+        echo -e "${GREEN}✓ bash is already the default shell${NC}"
     fi
 fi
 
 echo ""
-
-# Display completion message
-gum style \
-    --foreground 120 --border-foreground 120 --border double \
-    --align center --width 50 --margin "1 2" --padding "1 2" \
-    'Bootstrap Complete! 🎉'
+echo -e "${GREEN}"
+echo "╔════════════════════════════════════════════╗"
+echo "║         Bootstrap Complete! 🎉             ║"
+echo "╚════════════════════════════════════════════╝"
+echo -e "${NC}"
 
 echo ""
-gum style --foreground 75 --bold "Next Steps:"
-
-next_steps=""
+echo -e "${BLUE}Next Steps:${NC}"
 if [[ "$OS" == "macOS" ]]; then
-    next_steps+="1. Restart your terminal or run: source ~/.zshrc\n"
+    echo "1. Restart your terminal or run: source ~/.zshrc"
 else
-    next_steps+="1. Restart your terminal or run: source ~/.bashrc\n"
+    echo "1. Restart your terminal or run: source ~/.bashrc"
 fi
-next_steps+="2. Configure VS Code to use Fira Code font\n"
-next_steps+="3. Verify all tools are working correctly"
-
-echo -e "$next_steps" | gum format
+echo "2. Configure VS Code to use Fira Code font"
+echo "3. Verify all tools are working correctly"
 echo ""
-gum style --foreground 220 "⚠ Note: Some changes may require a system restart"
+echo -e "${YELLOW}⚠ Note: Some changes may require a system restart${NC}"
