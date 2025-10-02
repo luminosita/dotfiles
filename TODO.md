@@ -16,6 +16,7 @@
 - [x] VSCode themes (auto)
 - [ ] Floccus via Git (bookmark sync)
 - [ ] delete passwords from git history
+- [ ] Remove API_KEYs from fabric config
 
 ## Devbox
 Global:
