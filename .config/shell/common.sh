@@ -13,7 +13,7 @@ export LANG=en_US.UTF-8
 export PATH="$HOME/go/bin:$PATH"
 export PATH="/usr/local/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/.nix-profile/bin:$PATH"
+export PATH="/nix/var/nix/profiles/default/bin:$PATH"
 
 # Homebrew PATH (for local user installation on both macOS and Linux)
 if [[ -d "$HOME/homebrew/bin" ]]; then
