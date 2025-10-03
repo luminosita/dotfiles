@@ -15,7 +15,7 @@ source "$SCRIPT_DIR/lib/fonts.sh"
 
 # Base packages (hardcoded)
 BASE_PACKAGES=(
-    locale
+    locales
     yq
     git
     curl

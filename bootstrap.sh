@@ -213,9 +213,6 @@ elif [ "$INSTALL_OPTIONAL" = true ]; then
     echo -e "${GREEN}✓ Optional packages (${OPTIONAL_PACKAGES[*]})${NC}"
 elif [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
     echo -e "${GREEN}✓ Custom packages (${CUSTOM_PACKAGES[*]})${NC}"
-else
-    echo -e "${YELLOW}No packages selected. Installation cancelled${NC}"
-    exit 0
 fi
 
 echo ""
@@ -341,7 +338,7 @@ if [[ "$OS" == "macOS" ]]; then
     if [[ "$current_shell" != *"zsh"* ]]; then
         read -p "Set zsh as default shell? [Y/n]: " set_shell
         if [[ ! "$set_shell" =~ ^[Nn] ]]; then
-            chsh -s $(which zsh)
+            sudo chsh -s $(which zsh)
             echo -e "${GREEN}✓ Default shell set to zsh${NC}"
         fi
     else
@@ -352,7 +349,7 @@ elif [[ "$OS" == "Linux" ]]; then
     if [[ "$current_shell" != *"bash"* ]]; then
         read -p "Set bash as default shell? [Y/n]: " set_shell
         if [[ ! "$set_shell" =~ ^[Nn] ]]; then
-            chsh -s $(which bash)
+            sudo chsh -s $(which bash)
             echo -e "${GREEN}✓ Default shell set to bash${NC}"
         fi
     else

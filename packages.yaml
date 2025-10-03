@@ -3,11 +3,11 @@
 # Use "skip" to skip installation on specific platforms
 
 packages:
-  - name: locale
+  - name: locales
     brew: skip  # Installed by default on macOS
-    apt: locale
-    dnf: locale
-    pacman: locale
+    apt: locales
+    dnf: locales
+    pacman: locales
 
   # CLI tools
   - name: gh
