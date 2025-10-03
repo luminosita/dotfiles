@@ -45,7 +45,7 @@ fi
 
 # Check for package manager
 if [[ "$OS" == "macOS" ]]; then
-    if ! command -v brew &> /dev/null; then
+    if [[! -d "$HOME/homebrew"]]; then
         echo -e "${YELLOW}✗ Homebrew not found${NC}"
         MISSING_BREW=true
     else
@@ -86,6 +86,10 @@ if [ "$MISSING_BREW" = true ]; then
     mkdir -p ~/homebrew
     curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C ~/homebrew
 
+    echo -e "${GREEN}✓ Homebrew installed (local user installation in ~/homebrew)${NC}"
+fi
+
+if [[ "$OS" == "macOS" ]]; then
     # Add Homebrew to PATH for this session
     export PATH="$HOME/homebrew/bin:$PATH"
     export MANPATH="$HOME/homebrew/share/man:$MANPATH"
@@ -98,8 +102,6 @@ if [ "$MISSING_BREW" = true ]; then
 
     mkdir -p "$HOMEBREW_CACHE" "$HOMEBREW_TEMP" "$HOMEBREW_LOGS"
     brew analytics off
-
-    echo -e "${GREEN}✓ Homebrew installed (local user installation in ~/homebrew)${NC}"
 fi
 
 required_major=4
@@ -111,7 +113,7 @@ current_minor=$(echo "$BASH_VERSION" | cut -d'.' -f2)
 
 if (( current_major > required_major )) || \
    (( current_major == required_major && current_minor >= required_minor )); then
-    echo -e "${GREEN}Bash version $BASH_VERSION meets or exceeds the required version ($required_major.$required_minor)${NC}"
+    echo -e "${GREEN}✓ Bash version $BASH_VERSION meets or exceeds the required version ($required_major.$required_minor)${NC}"
 else
     echo -e "${RED}Bash version $BASH_VERSION is older than the required version ($required_major.$required_minor)${NC}"
     if [[ "$OS" == "macOS" ]]; then
@@ -120,7 +122,7 @@ else
         echo ""
         read -p "Upgrade Bash shell now? [Y/n]: " install_base
         if [[ ! "$install_base" =~ ^[Nn] ]]; then
-            brew install bash
+            $HOMEBREW_REPOSITORY/bin/brew install bash
             ln -s "$HOMEBREW_REPOSITORY/bin/bash" /usr/local/bin/bash
             echo -e "${GREEN}=== Bash Upgrade Complete ===${NC}"
             echo -e "${Yellow}Please restart the bootstrap script${NC}"
@@ -239,9 +241,11 @@ echo -e "${BLUE}=== Installation Summary ===${NC}"
 
 if [ "$INSTALL_DEV" = true ]; then
     echo -e "${GREEN}✓ Dev tools (${DEV_PACKAGES[*]})${NC}"
-elif [ "$INSTALL_OPTIONAL" = true ]; then
+fi
+if [ "$INSTALL_OPTIONAL" = true ]; then
     echo -e "${GREEN}✓ Optional packages (${OPTIONAL_PACKAGES[*]})${NC}"
-elif [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
+fi
+if [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
     echo -e "${GREEN}✓ Custom packages (${CUSTOM_PACKAGES[*]})${NC}"
 fi
 

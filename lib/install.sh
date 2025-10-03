@@ -94,7 +94,7 @@ if [ "$INSTALL_BASE" = true ]; then
     echo ""
 #TODO: nix command not found even if it is installed
     # Install Nix (single-user install, cross-platform)
-    if ! command -v nix &> /dev/null; then
+    if [[! -d "/nix"]]; then
         echo -e "${BLUE}Installing Nix package manager...${NC}"
 
         if sh <(curl -L https://nixos.org/nix/install) --daemon 2>/dev/null; then
