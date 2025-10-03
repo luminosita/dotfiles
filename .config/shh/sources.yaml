@@ -1,4 +1,6 @@
 sources:
 #  - bitwarden:GeminiAPI:APIKey=GEMINI_API_KEY
-  - bitwarden:GeminiAPI:FreeAPIKey=GEMINI_API_KEY
-  - bitwarden:YouTubeAPI:APIKey=YOUTUBE_API_KEY
+# - bitwarden:GeminiAPI:FreeAPIKey=GEMINI_API_KEY
+# - bitwarden:YouTubeAPI:APIKey=YOUTUBE_API_KEY
+- gcp:aiagent-471620:GeminiFreeAPI=GEMINI_API_KEY
+- gcp:aiagent-471620:YouTubeAPI=YOUTUBE_API_KEY

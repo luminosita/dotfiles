@@ -16,10 +16,10 @@
     in {
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [
-          gum
-          stow
+          google-cloud-sdk
+          fabric-ai
+          yt-dlp
         ];
-
         shellHook = ''
           export SHELL=/bin/zsh
           exec /bin/zsh

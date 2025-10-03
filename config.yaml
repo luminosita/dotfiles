@@ -15,8 +15,6 @@ dev:
     - tree
     - wget
     - podman
-    - yt-dlp
-    - fabric-ai
     - kubecolor
 
   # macOS GUI applications (casks)

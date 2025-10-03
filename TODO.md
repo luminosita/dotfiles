@@ -8,38 +8,22 @@
 - [X] test kubecolor linux hack
 
 ## TODO:
-- [X] starship
-- [X] nuscripts (farcic)
-- [X] devbox
-- [X] dotfiles, sync (farcic)
-- [ ] zellij on Linux
-- [X] fabric (env)
-- [X] iterm2
-- [X] cleanup devbox.json and default devbox.json
-- [ ] renovate for versions
-- [ ] uninstall.sh script
-- [X] VSCode extensions
-- [X] VSCode themes (auto)
+- [ ] zellij on Linux (bash <(curl -L https://zellij.dev/launch))
 - [ ] Floccus via Git (browser bookmark sync)
-- [ ] delete passwords from git history
-- [ ] Remove API_KEYs from fabric config
-- [X] Installation Wizard gum 
-- [X] Add to stow ignore all appropriate files
-- [X] Stow symlinks depending on OS
-- [X] Podman completion bash and zsh
 
-## Devbox
-Global:
-- [X] tor-browser
-- [X] brave ( +extensions)
-- [X] Podman/Docker
-- [X] Wireguard VPN
-- [X] Visual Studio Code
-
-Shell:
-- [X] cleanup gloud projects
-- [ ] bitwarden cli
-- [X] kubecolor special install script
-- [X] gh cli
+## Shell:
 - [ ] torsocks
-- [X] GitHub SSH key (insecure)
+
+## GCloud + SHH
+
+```sh          
+echo "Logging in to GCloud..."
+gcloud auth login
+
+#Pull secrets for Fabric AI
+chmod +x ./lib/shh.sh
+./lib/shh.sh -o .env && if [ -f ".env" ] && [ -s ".env" ]; then export $(grep -v '^#' .env | xargs) && rm .env; fi
+
+pbpaste | fabric --pattern summarize
+```
+

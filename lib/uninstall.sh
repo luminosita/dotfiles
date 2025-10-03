@@ -1,8 +1,5 @@
 stow -D .
 
-sudo rm -rf \
-    /usr/local/bin/devbox \
-    ~/.cache/devbox \
-    ~/.local/share/devbox \
-    ~/.zshrc
+rm -rf ~/homebrew
 
+# Uninstall Nix manually - multi-user (https://nix.dev/manual/nix/2.21/installation/uninstall)
