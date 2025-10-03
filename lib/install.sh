@@ -28,7 +28,6 @@ BASE_PACKAGES_LINUX=(
 BASE_PACKAGES_MAC=(
     yq
     git
-    curl
     stow
     bash
 )
@@ -92,8 +91,8 @@ if [ "$INSTALL_BASE" = true ]; then
     echo -e "${BLUE}Installing Nerd Fonts...${NC}"
     install_nerd_font "FiraCode"
     echo ""
-#TODO: nix command not found even if it is installed
-    # Install Nix (single-user install, cross-platform)
+
+    # Install Nix (multi-user install, cross-platform)
     if [[ ! -d "/nix" ]]; then
         echo -e "${BLUE}Installing Nix package manager...${NC}"
 
@@ -112,7 +111,7 @@ fi
 
 # Custom packages installation
 if [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
-    echo -e "${BLUE}=== Custom Packages Installation ===${NC}"
+    echo -e "${BLUE}=== Packages Installation ===${NC}"
 
     # Load package mappings
     load_package_mappings "$SCRIPT_DIR/packages.yaml"
@@ -124,6 +123,6 @@ if [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
         install_kubecolor
     fi
 
-    echo -e "${GREEN}=== Custom Packages Installation complete ===${NC}"
+    echo -e "${GREEN}=== Packages Installation complete ===${NC}"
 fi
 

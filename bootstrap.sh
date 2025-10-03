@@ -123,7 +123,7 @@ else
         read -p "Upgrade Bash shell now? [Y/n]: " install_base
         if [[ ! "$install_base" =~ ^[Nn] ]]; then
             brew install bash
-            ln -s "$HOMEBREW_REPOSITORY/bin/bash" /usr/local/bin/bash
+            sudo ln -s "$HOMEBREW_REPOSITORY/bin/bash" /usr/local/bin/bash
             echo -e "${GREEN}=== Bash Upgrade Complete ===${NC}"
             echo -e "${YELLOW}Please restart the bootstrap script${NC}"
         else
@@ -166,70 +166,36 @@ mapfile -t VSCODE_EXTENSIONS < <(yq -r '.vscode.extensions[]' "$SCRIPT_DIR/confi
 
 # Prompt for installation options
 echo -e "${BLUE}What would you like to install?${NC}"
-echo "1) Full installation (base + dev tools + optional)"
-echo "2) Base installation only"
-echo "3) Base + dev tools"
-echo "4) Custom package selection"
+# Show dev packages and ask
 echo ""
-read -p "Enter your choice [1-4]: " choice_num
+echo -e "${BLUE}Development packages:${NC}"
+printf '%s\n' "${DEV_PACKAGES[@]}"
+echo ""
+read -p "Install all development packages? [Y/n]: " install_dev
+INSTALL_DEV=$([ "$install_dev" != "n" ] && [ "$install_dev" != "N" ] && echo true || echo false)
 
-case "$choice_num" in
-    1) choice="Full installation (base + dev tools + optional)" ;;
-    2) choice="Base installation only" ;;
-    3) choice="Base + dev tools" ;;
-    4) choice="Custom package selection" ;;
-    *) echo -e "${RED}Invalid choice${NC}"; exit 1 ;;
-esac
+# Show dev apps and ask
+echo ""
+echo -e "${BLUE}Development Applications:${NC}"
+printf '%s\n' "${DEV_CASKS[@]}"
+echo ""
+read -p "Install all development applications? [Y/n]: " install_apps
+INSTALL_APP_CASKS=$([ "$install_apps" != "n" ] && [ "$install_apps" != "N" ] && echo true || echo false)
 
-case "$choice" in
-    "Full installation (base + dev tools + optional)")
-        INSTALL_DEV=true
-        INSTALL_OPTIONAL=true
-        INSTALL_VSCODE=true
-        INSTALL_CLAUDE_CODE=true
-        CUSTOM_PACKAGES=()
-        ;;
-    "Base installation only")
-        INSTALL_DEV=false
-        INSTALL_OPTIONAL=false
-        INSTALL_VSCODE=false
-        INSTALL_CLAUDE_CODE=false
-        CUSTOM_PACKAGES=()
-        ;;
-    "Base + dev tools")
-        INSTALL_DEV=true
-        INSTALL_OPTIONAL=false
-        INSTALL_VSCODE=true
-        INSTALL_CLAUDE_CODE=true
-        CUSTOM_PACKAGES=()
-        ;;
-    "Custom package selection")
-        # Show dev packages and ask
-        echo ""
-        echo -e "${BLUE}Development packages:${NC}"
-        printf '%s\n' "${DEV_PACKAGES[@]}"
-        echo ""
-        read -p "Install all development packages? [Y/n]: " install_dev
-        INSTALL_DEV=$([ "$install_dev" != "n" ] && [ "$install_dev" != "N" ] && echo true || echo false)
+# Show optional packages and ask
+echo ""
+echo -e "${BLUE}Optional packages:${NC}"
+printf '%s\n' "${OPTIONAL_PACKAGES[@]}"
+echo ""
+read -p "Install all optional packages? [Y/n]: " install_opt
+INSTALL_OPTIONAL=$([ "$install_opt" != "n" ] && [ "$install_opt" != "N" ] && echo true || echo false)
 
-        # Show optional packages and ask
-        echo ""
-        echo -e "${BLUE}Optional packages:${NC}"
-        printf '%s\n' "${OPTIONAL_PACKAGES[@]}"
-        echo ""
-        read -p "Install all optional packages? [Y/n]: " install_opt
-        INSTALL_OPTIONAL=$([ "$install_opt" != "n" ] && [ "$install_opt" != "N" ] && echo true || echo false)
+echo ""
+read -p "Install Visual Studio Code? [Y/n]: " install_vscode
+INSTALL_VSCODE=$([ "$install_vscode" != "n" ] && [ "$install_vscode" != "N" ] && echo true || echo false)
 
-        echo ""
-        read -p "Install Visual Studio Code? [Y/n]: " install_vscode
-        INSTALL_VSCODE=$([ "$install_vscode" != "n" ] && [ "$install_vscode" != "N" ] && echo true || echo false)
-
-        read -p "Install Claude Code? [Y/n]: " install_claude
-        INSTALL_CLAUDE_CODE=$([ "$install_claude" != "n" ] && [ "$install_claude" != "N" ] && echo true || echo false)
-
-        CUSTOM_PACKAGES=()
-        ;;
-esac
+read -p "Install Claude Code? [Y/n]: " install_claude
+INSTALL_CLAUDE_CODE=$([ "$install_claude" != "n" ] && [ "$install_claude" != "N" ] && echo true || echo false)
 
 echo ""
 
@@ -242,11 +208,11 @@ echo -e "${BLUE}=== Installation Summary ===${NC}"
 if [ "$INSTALL_DEV" = true ]; then
     echo -e "${GREEN}✓ Dev tools (${DEV_PACKAGES[*]})${NC}"
 fi
+if [ "$INSTALL_APP_CASKS" = true ]; then
+    echo -e "${GREEN}✓ Dev apps (${DEV_CASKS[*]})${NC}"
+fi
 if [ "$INSTALL_OPTIONAL" = true ]; then
     echo -e "${GREEN}✓ Optional packages (${OPTIONAL_PACKAGES[*]})${NC}"
-fi
-if [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
-    echo -e "${GREEN}✓ Custom packages (${CUSTOM_PACKAGES[*]})${NC}"
 fi
 
 echo ""
@@ -266,7 +232,7 @@ ALL_CASKS=()
 
 if [ "$INSTALL_DEV" = true ]; then
     ALL_PACKAGES+=("${DEV_PACKAGES[@]}")
-    if [[ "$OS" == "macOS" ]]; then
+    if [[ "$OS" == "macOS" ]] && [ "$INSTALL_APP_CASKS" = true ]; then
         ALL_CASKS+=("${DEV_CASKS[@]}")
     fi
 fi
@@ -276,10 +242,6 @@ if [ "$INSTALL_OPTIONAL" = true ]; then
     if [[ "$OS" == "macOS" ]]; then
         ALL_CASKS+=("${OPTIONAL_CASKS[@]}")
     fi
-fi
-
-if [ ${#CUSTOM_PACKAGES[@]} -gt 0 ]; then
-    ALL_PACKAGES+=("${CUSTOM_PACKAGES[@]}")
 fi
 
 # Build install.sh arguments
