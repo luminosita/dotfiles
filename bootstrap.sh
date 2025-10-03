@@ -45,7 +45,7 @@ fi
 
 # Check for package manager
 if [[ "$OS" == "macOS" ]]; then
-    if [[! -d "$HOME/homebrew"]]; then
+    if [[ ! -d "$HOME/homebrew" ]]; then
         echo -e "${YELLOW}✗ Homebrew not found${NC}"
         MISSING_BREW=true
     else

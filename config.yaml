@@ -4,6 +4,7 @@
 # Development tools (CLI)
 dev:
   packages:
+    - vim
     - bitwarden-cli
     - gh
     - kubectl

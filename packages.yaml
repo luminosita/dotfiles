@@ -10,6 +10,12 @@ packages:
     pacman: locales
 
   # CLI tools
+  - name: vim
+    brew: vim
+    apt: vim
+    dnf: vim
+    pacman: vim
+
   - name: gh
     brew: gh
     apt: gh
