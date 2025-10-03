@@ -5,7 +5,7 @@
 - [ ] Floccus via Git (browser bookmark sync, use GitHub personal access token for password)
 - [ ] torsocks (alternative is thru external router)
 
-- [ ] GCloud + SHH
+- [ ] GCloud + SHH in nixd
 ```sh          
 echo "Logging in to GCloud..."
 gcloud auth login
