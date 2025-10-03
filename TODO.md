@@ -1,21 +1,11 @@
-## BUGs:
-- [X] "command not found" when opening fresh iTerm window
-- [X] test symlinks on macOS
-- [X] test local nix PATH
-- [X] test bat PATH
-- [X] LOCALE errors on Linux
-- [X] podman in starship line in shell
-- [X] test kubecolor linux hack
+## ISSUES:
 
-## TODO:
-- [ ] zellij on Linux (bash <(curl -L https://zellij.dev/launch))
-- [ ] Floccus via Git (browser bookmark sync)
+## TASKS:
+- [ ] zellij on Linux (https://zellij.dev/, bash <(curl -L https://zellij.dev/launch))
+- [ ] Floccus via Git (browser bookmark sync, use GitHub personal access token for password)
+- [ ] torsocks (alternative is thru external router)
 
-## Shell:
-- [ ] torsocks
-
-## GCloud + SHH
-
+- [ ] GCloud + SHH
 ```sh          
 echo "Logging in to GCloud..."
 gcloud auth login
