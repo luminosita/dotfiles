@@ -14,7 +14,7 @@ source "$SCRIPT_DIR/lib/package-install.sh"
 source "$SCRIPT_DIR/lib/fonts.sh"
 
 # Base packages (hardcoded)
-BASE_PACKAGES=(
+BASE_PACKAGES_LINUX=(
     locales
     yq
     git
@@ -23,6 +23,13 @@ BASE_PACKAGES=(
     xz-utils
     fontconfig
     gnupg
+)
+
+BASE_PACKAGES_MAC=(
+    yq
+    git
+    curl
+    stow
 )
 
 # Parse arguments
@@ -67,7 +74,16 @@ if [ "$INSTALL_BASE" = true ]; then
 
     # Install base tools FIRST (needed for fonts and other steps)
     echo -e "${BLUE}Installing base tools...${NC}"
-    install_packages "${BASE_PACKAGES[@]}"
+    
+    if [[ "$OS" == "linux" ]]; then
+        install_packages "${BASE_PACKAGES_LINUX[@]}"
+    elseif [[ "$OS" == "macos" ]]; then
+        install_packages "${BASE_PACKAGES_MAC[@]}"
+    else
+        echo -e "${RED}Error: Unsupported operating system${NC}"
+        exit 1
+    fi
+
     echo -e "${GREEN}✓ Base tools installed${NC}"
     echo ""
 

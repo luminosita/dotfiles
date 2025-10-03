@@ -5,6 +5,7 @@
 - [ ] test bat PATH
 - [ ] LOCALE errors on Linux
 - [ ] podman in starship line in shell
+- [ ] test kubecolor linux hack
 
 ## TODO:
 - [X] starship
@@ -16,7 +17,7 @@
 - [X] iterm2
 - [X] cleanup devbox.json and default devbox.json
 - [ ] renovate for versions
-- [X] uninstall.sh script
+- [ ] uninstall.sh script
 - [X] VSCode extensions
 - [X] VSCode themes (auto)
 - [ ] Floccus via Git (bookmark sync)
@@ -26,6 +27,7 @@
 - [X] Add to stow ignore all appropriate files
 - [X] Stow symlinks depending on OS
 - [ ] Podman completion bash and zsh
+
 ## Devbox
 Global:
 - [X] tor-browser

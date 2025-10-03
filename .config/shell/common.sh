@@ -76,6 +76,7 @@ else
     alias lst='ls -laht'
 fi
 
+#TODO: Fix theme on Linux
 if command -v bat &> /dev/null; then
     alias cat='bat --paging never --theme-dark DarkNeon --theme-light GitHub --style changes,header-filename,snip'
 fi
