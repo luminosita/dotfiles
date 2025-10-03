@@ -102,6 +102,34 @@ if [ "$MISSING_BREW" = true ]; then
     echo -e "${GREEN}✓ Homebrew installed (local user installation in ~/homebrew)${NC}"
 fi
 
+required_major=4
+required_minor=3
+
+# Extract major and minor version from $BASH_VERSION
+current_major=$(echo "$BASH_VERSION" | cut -d'.' -f1)
+current_minor=$(echo "$BASH_VERSION" | cut -d'.' -f2)
+
+if (( current_major > required_major )) || \
+   (( current_major == required_major && current_minor >= required_minor )); then
+    echo -e "${GREEN}Bash version $BASH_VERSION meets or exceeds the required version ($required_major.$required_minor)${NC}"
+else
+    echo -e "${RED}Bash version $BASH_VERSION is older than the required version ($required_major.$required_minor)${NC}"
+    if [[ "$OS" == "macOS" ]]; then
+        echo ""
+        echo -e "${BLUE}=== Bash Upgrade ===${NC}"
+        echo ""
+        read -p "Upgrade Bash shell now? [Y/n]: " install_base
+        if [[ ! "$install_base" =~ ^[Nn] ]]; then
+            brew install bash
+            ln -s "$HOMEBREW_REPOSITORY/bin/bash" /usr/local/bin/bash
+            echo -e "${GREEN}=== Bash Upgrade Complete ===${NC}"
+        else
+            echo -e "${RED}Cannot proceed without required packages${NC}"
+        fi
+    fi
+    exit 1
+fi
+
 echo ""
 echo -e "${BLUE}=== Base Installation ===${NC}"
 echo -e "${YELLOW}This will install: fonts, zinit, nix, git, curl, stow, xz-utils, fontconfig, gnupg${NC}"
@@ -125,6 +153,7 @@ echo -e "${GREEN}✓ Detected OS: $OS${NC}"
 echo -e "${GREEN}✓ Default shell: $DEFAULT_SHELL${NC}"
 echo ""
 
+#TODO: mapfile requires Bash 4+
 # Load package lists from config.yaml
 mapfile -t DEV_PACKAGES < <(yq -r '.dev.packages[]' "$SCRIPT_DIR/config.yaml")
 mapfile -t OPTIONAL_PACKAGES < <(yq -r '.optional.packages[]' "$SCRIPT_DIR/config.yaml")

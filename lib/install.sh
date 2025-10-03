@@ -92,7 +92,7 @@ if [ "$INSTALL_BASE" = true ]; then
     echo -e "${BLUE}Installing Nerd Fonts...${NC}"
     install_nerd_font "FiraCode"
     echo ""
-
+#TODO: nix command not found even if it is installed
     # Install Nix (single-user install, cross-platform)
     if ! command -v nix &> /dev/null; then
         echo -e "${BLUE}Installing Nix package manager...${NC}"
