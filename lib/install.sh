@@ -30,6 +30,7 @@ BASE_PACKAGES_MAC=(
     git
     curl
     stow
+    bash
 )
 
 # Parse arguments
@@ -95,7 +96,8 @@ if [ "$INSTALL_BASE" = true ]; then
     # Install Nix (single-user install, cross-platform)
     if ! command -v nix &> /dev/null; then
         echo -e "${BLUE}Installing Nix package manager...${NC}"
-        if sh <(curl -L https://nixos.org/nix/install) --no-daemon 2>/dev/null; then
+
+        if sh <(curl -L https://nixos.org/nix/install) --daemon 2>/dev/null; then
             echo -e "${GREEN}✓ Nix installed${NC}"
         else
             echo -e "${YELLOW}⚠ Nix installation failed (skipping)${NC}"
