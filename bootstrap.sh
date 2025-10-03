@@ -123,7 +123,8 @@ else
         read -p "Upgrade Bash shell now? [Y/n]: " install_base
         if [[ ! "$install_base" =~ ^[Nn] ]]; then
             brew install bash
-            sudo ln -s "$HOMEBREW_REPOSITORY/bin/bash" /usr/local/bin/bash
+            mkdir -p "$HOME/.local/bin"
+            ln -s "$HOMEBREW_REPOSITORY/bin/bash" "$HOME/.local/bin/bash"
             echo -e "${GREEN}=== Bash Upgrade Complete ===${NC}"
             echo -e "${YELLOW}Please restart the bootstrap script${NC}"
         else
