@@ -122,10 +122,10 @@ else
         echo ""
         read -p "Upgrade Bash shell now? [Y/n]: " install_base
         if [[ ! "$install_base" =~ ^[Nn] ]]; then
-            $HOMEBREW_REPOSITORY/bin/brew install bash
+            brew install bash
             ln -s "$HOMEBREW_REPOSITORY/bin/bash" /usr/local/bin/bash
             echo -e "${GREEN}=== Bash Upgrade Complete ===${NC}"
-            echo -e "${Yellow}Please restart the bootstrap script${NC}"
+            echo -e "${YELLOW}Please restart the bootstrap script${NC}"
         else
             echo -e "${RED}Cannot proceed without required packages${NC}"
         fi
