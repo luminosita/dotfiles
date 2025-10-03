@@ -1,11 +1,11 @@
-## BUGS:
+## BUGs:
 - [X] "command not found" when opening fresh iTerm window
-- [ ] test symlinks on macOS
-- [ ] test local nix PATH
-- [ ] test bat PATH
-- [ ] LOCALE errors on Linux
+- [X] test symlinks on macOS
+- [X] test local nix PATH
+- [X] test bat PATH
+- [X] LOCALE errors on Linux
 - [ ] podman in starship line in shell
-- [ ] test kubecolor linux hack
+- [X] test kubecolor linux hack
 
 ## TODO:
 - [X] starship
@@ -39,7 +39,7 @@ Global:
 Shell:
 - [X] cleanup gloud projects
 - [ ] bitwarden cli
-- [ ] kubecolor special install script
+- [X] kubecolor special install script
 - [X] gh cli
 - [ ] torsocks
 - [X] GitHub SSH key (insecure)

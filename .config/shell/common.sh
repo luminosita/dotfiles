@@ -50,7 +50,6 @@ if command -v zoxide &> /dev/null; then
     fi
 fi
 
-#TODO: Podman autocomplete
 # Kubectl completion and kubecolor
 if command -v kubectl &> /dev/null; then
     if [[ -n "$ZSH_VERSION" ]]; then
@@ -66,7 +65,6 @@ if command -v kubectl &> /dev/null; then
     fi
 fi
 
-#TODO: Test all aliases
 # Aliases (common for both bash and zsh)
 if command -v eza &> /dev/null; then
     alias lsa='eza --long --all --no-permissions --no-filesize --no-user --no-time --git'

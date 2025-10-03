@@ -157,7 +157,6 @@ echo -e "${GREEN}✓ Detected OS: $OS${NC}"
 echo -e "${GREEN}✓ Default shell: $DEFAULT_SHELL${NC}"
 echo ""
 
-#TODO: mapfile requires Bash 4+
 # Load package lists from config.yaml
 mapfile -t DEV_PACKAGES < <(yq -r '.dev.packages[]' "$SCRIPT_DIR/config.yaml")
 mapfile -t OPTIONAL_PACKAGES < <(yq -r '.optional.packages[]' "$SCRIPT_DIR/config.yaml")

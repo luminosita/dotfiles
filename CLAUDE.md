@@ -38,8 +38,6 @@ dotfiles/
 ├── .bash_profile            # Bash profile (sources .bashrc)
 ├── .zshrc                   # Zsh configuration (macOS)
 ├── packages.yaml            # Package name mappings across platforms
-├── Brewfile-dev             # Development tools (Homebrew format)
-└── Brewfile-opt             # Optional packages (Homebrew format)
 ```
 
 ### Component Responsibilities
