@@ -123,6 +123,7 @@ else
             brew install bash
             ln -s "$HOMEBREW_REPOSITORY/bin/bash" /usr/local/bin/bash
             echo -e "${GREEN}=== Bash Upgrade Complete ===${NC}"
+            echo -e "${Yellow}Please restart the bootstrap script${NC}"
         else
             echo -e "${RED}Cannot proceed without required packages${NC}"
         fi
