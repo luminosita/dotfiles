@@ -77,7 +77,7 @@ if [ "$INSTALL_BASE" = true ]; then
     
     if [[ "$OS" == "linux" ]]; then
         install_packages "${BASE_PACKAGES_LINUX[@]}"
-    elseif [[ "$OS" == "macos" ]]; then
+    elif [[ "$OS" == "macos" ]]; then
         install_packages "${BASE_PACKAGES_MAC[@]}"
     else
         echo -e "${RED}Error: Unsupported operating system${NC}"
