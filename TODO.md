@@ -4,7 +4,7 @@
 - [X] test local nix PATH
 - [X] test bat PATH
 - [X] LOCALE errors on Linux
-- [ ] podman in starship line in shell
+- [X] podman in starship line in shell
 - [X] test kubecolor linux hack
 
 ## TODO:
@@ -20,13 +20,13 @@
 - [ ] uninstall.sh script
 - [X] VSCode extensions
 - [X] VSCode themes (auto)
-- [ ] Floccus via Git (bookmark sync)
+- [ ] Floccus via Git (browser bookmark sync)
 - [ ] delete passwords from git history
 - [ ] Remove API_KEYs from fabric config
 - [X] Installation Wizard gum 
 - [X] Add to stow ignore all appropriate files
 - [X] Stow symlinks depending on OS
-- [ ] Podman completion bash and zsh
+- [X] Podman completion bash and zsh
 
 ## Devbox
 Global:

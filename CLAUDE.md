@@ -11,7 +11,6 @@ This dotfiles repository has been engineered to be fully cross-platform, automat
 - **OS Detection**: Automatic detection of macOS vs Linux
 - **Package Manager Support**: Homebrew (macOS), apt/dnf/pacman (Linux)
 - **Shell Configuration**: zsh (macOS), bash (Linux) with shared common config
-- **Interactive UI**: Uses `gum` for beautiful TUI interactions
 - **Modular Design**: Clean separation of concerns with utility libraries
 
 ## Architecture
@@ -77,7 +76,6 @@ dotfiles/
 - Installs Zinit plugin manager
 - Installs Nix package manager
 - Installs Nerd Fonts (FiraCode)
-- Installs Bitwarden CLI
 
 #### `lib/install-dev.sh`
 - Development tools installation
@@ -184,7 +182,6 @@ All shared configuration lives in `.config/shell/common.sh`:
 ### Installed by Scripts
 - **Zinit**: Zsh/Bash plugin manager
 - **Nix**: Functional package manager
-- **Bitwarden CLI**: Secret management
 - **GNU Stow**: Symlink management
 - **Git**: Version control
 - **curl**: HTTP client
@@ -300,14 +297,6 @@ While most configuration is shared in `common.sh`, shell-specific files handle:
 - Completion systems
 - Key bindings
 
-### Why gum as Required Dependency?
-
-Making `gum` required (with auto-install) ensures:
-- Consistent, beautiful UI across all platforms
-- Better user experience with interactive prompts
-- Visual feedback during installation
-- Simplified code (no fallback logic)
-
 ## Troubleshooting
 
 ### Homebrew Not in PATH
@@ -374,9 +363,7 @@ Created during a Claude Code session on October 2, 2024.
 
 **Technologies Used**:
 - [Homebrew](https://brew.sh/) - Package manager
-- [gum](https://github.com/charmbracelet/gum) - TUI library
 - [Zinit](https://github.com/zdharma-continuum/zinit) - Plugin manager
 - [GNU Stow](https://www.gnu.org/software/stow/) - Symlink manager
 - [Nix](https://nixos.org/) - Functional package manager
 - [Starship](https://starship.rs/) - Shell prompt
-- [Bitwarden](https://bitwarden.com/) - Secret management

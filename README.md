@@ -1,89 +1,106 @@
-# Master Your New Laptop Setup: Tools, Configs, and Secrets!
+# Cross-Platform Dotfiles
 
-## Setup
+A comprehensive dotfiles setup that works seamlessly on both macOS and Linux, with automatic OS detection, package manager support, and interactive installation.
 
-```sh
-cd ~/
+## Features
 
-git clone https://github.com/luminosita/dotfiles.git
+- **Cross-Platform**: Supports macOS and Linux (Ubuntu, Fedora, Arch)
+- **Automatic Detection**: OS and package manager detection
+- **Modular Design**: Separate scripts for base, dev tools, and optional packages
+- **Shared Configuration**: Common shell config for both bash (Linux) and zsh (macOS)
+- **Secret Management**: Bitwarden integration for secure credential storage
+- **Container Tools**: Podman with completion support
 
-cd dotfiles
-
-git pull
-
-git fetch
-
-git checkout dotfiles
-
-chmod +x install.sh install-dev.sh install-optional.sh sync.sh
-```
-
-> [!IMPORTANT]
-> The commands that follow will copy a few dot files that you might have in your home directory. After the demo you should be able to restore them if you’d like to go back to the initial state.
-
-> [!TIP]
-> If one of the commands that follow throw an error, it’s most likely because you do not have the corresponding dot file in your home directory. That’s fine. Just ignore the error and move to the next command.
+## Quick Start
 
 ```sh
-mv ~/.zshrc ~/.zshrc-orig
+# Clone the repository
+git clone https://github.com/luminosita/dotfiles.git ~/dotfiles
+cd ~/dotfiles
 
-mv ~/.config/starship.toml ~/.config/starship.toml-orig
-
-mv ~/.config/fabric ~/.config/fabric-orig
+# Run the interactive installer
+./bootstrap.sh
 ```
 
-Execute the install script.
+The bootstrap script will:
+1. Check for required dependencies (gum, package manager)
+2. Offer to install missing dependencies
+3. Show an interactive menu for installation options
+4. Install selected components
+5. Optionally sync dotfiles and configure git
+
+## Configuration
+
+`Bootstrap` script will read `config.yaml` file and install the packages
+
+## Installation Options
+
+### Full Installation (Recommended)
+```sh
+./bootstrap.sh
+```
+
+### Manual Installation
+```sh
+# Base installation (Homebrew, Zinit, Nix, fonts)
+./lib/install.sh
+
+# Development tools (git, docker, kubectl, VS Code, etc.)
+./lib/install-dev.sh
+
+# Optional packages (VLC, Transmission, etc.)
+./lib/install-optional.sh
+
+# Sync and configure (git, SSH keys, symlinks)
+./lib/sync.sh
+```
+
+## Platform Support
+
+### macOS
+- Shell: zsh (default)
+- Package Manager: Homebrew (local install in `~/homebrew`)
+- Font Directory: `~/Library/Fonts`
+
+### Linux
+- Shell: bash (default)
+- Package Manager: apt, dnf, or pacman (system package manager)
+- Font Directory: `~/.local/share/fonts`
+
+## Key Components
+
+### Shell Configuration
+- **`.config/shell/common.sh`**: Shared configuration for bash and zsh
+  - PATH setup (Homebrew, Go, Nix, local bin)
+  - Tool initialization (Starship, Zoxide, thefuck)
+  - Completions (kubectl, podman)
+  - Common aliases (eza, bat, kubecolor)
+
+### Included Tools
+- **Shell**: Starship prompt, Zoxide, thefuck
+- **Development**: git, gh, docker/podman, kubectl, kubecolor
+- **Languages**: go, rust, node, python
+- **Editors**: VS Code with extensions
+- **Utilities**: eza, bat, fzf, ripgrep, fd, jq, yq
+- **Secrets**: Bitwarden CLI, shh.sh
+- **Package Managers**: Homebrew, Nix, Zinit
+
+## Usage
+
+After installation, start a new terminal session. The prompt will be powered by Starship and all tools will be configured.
+
+### Example: Using Zoxide
+Zoxide enhances `cd` with smart directory navigation:
 
 ```sh
-./install.sh
-./install-dev.sh
+cd dot  # Press tab to jump to ~/dotfiles
 ```
+
+### Example: Using Nix
+Run development environments with unfree packages:
 
 ```sh
-nix develop --impure
-```
-
-Now that we have the tools, both those installed globally and those we need in relataion to the repo we’re working on, we can, finally, take a look at the script that does that.
-
-```sh
-./sync.sh
-```
-
-Stow created the symbolic links so now _.zshrc_ from this repo is available through the link in the home directory (`~/.zshrc`) as well and we can, for example, `source` it.
-
-```sh
-source ~/.zshrc
-```
-
-The output is as follows.
-
-```
-dotfiles [📝] via ❄️  impure
-➜ 
-```
-
-> Exit nix shell. Close the terminal session. Start a new terminal session.
-
-The output is as follows.
-
-```
-~/code
-➜
-```
-
-We can see that the prompt is just as it should be and the tools are configured properly. To demonstrate that, we can use Zoxide which is a replacement of _cd_ command that allows us to navigate directories more easily. So, if we type `cd dot` and press `tab`, we’ll be taken to the `dotfiles` directory automatically.
-
-```sh
-cd dot 
-```
-
-> Ensure that there is `space` at the end of the previous command and press the `tab` key to go directly to the `dotfiles` using `zoxide`.
-
-The output is as follows.
-
-```sh
-dotfiles 
-➜ 
+nixd  # Alias for: nix develop --impure
 ```
 
 ## Optional Applications

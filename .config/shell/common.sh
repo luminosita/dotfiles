@@ -65,6 +65,15 @@ if command -v kubectl &> /dev/null; then
     fi
 fi
 
+# Podman completion
+if command -v podman &> /dev/null; then
+    if [[ -n "$ZSH_VERSION" ]]; then
+        source <(podman completion zsh)
+    elif [[ -n "$BASH_VERSION" ]]; then
+        source <(podman completion bash)
+    fi
+fi
+
 # Aliases (common for both bash and zsh)
 if command -v eza &> /dev/null; then
     alias lsa='eza --long --all --no-permissions --no-filesize --no-user --no-time --git'
