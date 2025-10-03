@@ -11,6 +11,7 @@
       
       pkgs = import nixpkgs {
         inherit system;
+        config.allowUnfree = true;
       };
     in {
       devShells.${system}.default = pkgs.mkShell {

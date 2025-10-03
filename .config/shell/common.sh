@@ -75,7 +75,7 @@ else
 fi
 
 if command -v bat &> /dev/null; then
-    alias cat='bat --paging never --theme=DarkNeon --style changes,header-filename,snip'
+    alias cat='bat --paging never --theme-dark DarkNeon --theme-light GitHub --style changes,header-filename,snip'
 fi
 
 if command -v fzf &> /dev/null && command -v bat &> /dev/null; then
@@ -88,7 +88,7 @@ fi
 
 # Nix with unfree packages
 if command -v nix &> /dev/null; then
-    alias nixd='NIXPKGS_ALLOW_UNFREE=1 nix develop --impure'
+    alias nixd='nix develop --impure'
 fi
 
 # Additional common aliases
