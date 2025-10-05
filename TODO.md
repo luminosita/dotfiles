@@ -4,6 +4,7 @@
 - [ ] zellij on Linux (https://zellij.dev/, bash <(curl -L https://zellij.dev/launch))
 - [ ] Floccus via Git (browser bookmark sync, use GitHub personal access token for password)
 - [ ] torsocks (alternative is thru external router)
+- [ ] Vault
 
 - [ ] GCloud + SHH in nixd
 ```sh          
