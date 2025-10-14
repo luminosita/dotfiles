@@ -41,4 +41,7 @@
     "markdown-preview-enhanced.revealjsTheme": "black.css",
     "markdown-preview-enhanced.enablePreviewZenMode": false,
     "redhat.telemetry.enabled": false,
+    "[yaml]": {
+        "diffEditor.ignoreTrimWhitespace": true
+    },
 }
