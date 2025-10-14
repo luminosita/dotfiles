@@ -5,7 +5,7 @@
     "git.enableSmartCommit": true,
     "diffEditor.ignoreTrimWhitespace": false,
     "[markdown]": {
-        "diffEditor.ignoreTrimWhitespace": true
+        "diffEditor.ignoreTrimWhitespace": false
     },
     "yaml.customTags": [],
     "files.associations": {
