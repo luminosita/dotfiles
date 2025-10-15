@@ -1,6 +1,7 @@
 ## ISSUES:
 
 ## TASKS:
+- [ ] Rewrite setup script as NuShell
 - [ ] Taskfile
 - [ ] zellij on Linux (https://zellij.dev/, bash <(curl -L https://zellij.dev/launch))
 - [ ] Floccus via Git (browser bookmark sync, use GitHub personal access token for password)
