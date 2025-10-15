@@ -15,5 +15,21 @@
       "args": {
         "snippet": "```bash\n${TM_SELECTED_TEXT}```"
       }
-    }  
+    },
+    {
+      "key": "cmd+m right",
+      "command": "workbench.action.moveEditorToRightGroup"
+    },
+    {
+      "key": "cmd+m left",
+      "command": "workbench.action.moveEditorToLeftGroup"
+    },
+    {
+      "key": "cmd+m down",
+      "command": "workbench.action.moveEditorToBelowGroup"
+    },
+    {
+      "key": "cmd+m up",
+      "command": "workbench.action.moveEditorToAboveGroup"
+    }
 ]
