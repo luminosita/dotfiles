@@ -74,6 +74,15 @@ if command -v podman &> /dev/null; then
     fi
 fi
 
+# Taskfile completion
+if command -v task &> /dev/null; then
+    if [[ -n "$ZSH_VERSION" ]]; then
+        source <(task --completion zsh)
+    elif [[ -n "$BASH_VERSION" ]]; then
+        source <(task --completion bash)
+    fi
+fi
+
 # Aliases (common for both bash and zsh)
 if command -v eza &> /dev/null; then
     alias lsa='eza --long --all --no-permissions --no-filesize --no-user --no-time --git'
