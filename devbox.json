@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/.schema/devbox.schema.json",
+  "packages": [
+    "yt-dlp@latest",
+    "ffmpeg@latest"
+    ]
+}
