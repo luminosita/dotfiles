@@ -44,4 +44,12 @@
     "[yaml]": {
         "diffEditor.ignoreTrimWhitespace": true
     },
+    "[go]": {
+        "editor.insertSpaces": false,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "go.toolsManagement.autoUpdate": true,
 }

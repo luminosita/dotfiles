@@ -5,3 +5,4 @@ devbox.lock
 .ssh/
 .stow-local-ignore
 /.env
+.kube/cache
