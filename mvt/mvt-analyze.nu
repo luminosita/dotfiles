@@ -25,6 +25,39 @@ def log_warn [msg: string] {
     print $"(ansi yellow)[!](ansi reset) ($msg)"
 }
 
+# Setup libusb environment for USB support
+def setup_libusb [] {
+    # Try to discover libusb path using brew
+    let libusb_path = (try {
+        let brew_prefix = (^brew --prefix libusb | str trim)
+        $brew_prefix | path join "lib"
+    } catch {
+        ""
+    })
+
+    if ($libusb_path | is-empty) {
+        log_warn "libusb not found. USB support may not work."
+        log_warn "Install with: brew install libusb"
+        return
+    }
+
+    # Add libusb to DYLD_LIBRARY_PATH
+    let current_dyld = ($env.DYLD_LIBRARY_PATH? | default "")
+
+    if ($current_dyld | str contains $libusb_path) {
+        log_info "libusb already in DYLD_LIBRARY_PATH"
+    } else {
+        let new_dyld = if ($current_dyld | is-empty) {
+            $libusb_path
+        } else {
+            $"($libusb_path):($current_dyld)"
+        }
+
+        $env.DYLD_LIBRARY_PATH = $new_dyld
+        log_success $"Added libusb to environment: ($libusb_path)"
+    }
+}
+
 # Check if adb is installed
 def check_adb [] {
     if (which adb | is-empty) {
@@ -499,6 +532,9 @@ def main [--skip-sms, --resume] {
     print "MVT - Mobile Verification Toolkit - Android Analysis"
     print (ansi reset)
     print ""
+
+    # Setup libusb environment first (required for all operations)
+    setup_libusb
 
     if $skip_sms {
         log_warn "SMS module will be skipped"
