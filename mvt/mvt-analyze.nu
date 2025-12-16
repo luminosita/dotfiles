@@ -1,40 +1,12 @@
 #!/usr/bin/env nu
 
 # Mobile Verification Toolkit - Android Device Analysis (NuShell)
-# Uses both official MVT verification methods:
-# 1. check-adb: Live system analysis
-# 2. check-backup --iocs: SMS message analysis with IOC checking
+# Uses official MVT verification method:
+# check-adb: Live system analysis
 
-# Configuration
 let cwd = (pwd)
 let project_root = ($cwd | path dirname)
 let output_dir = ($project_root | path join "out")
-
-# Setup libusb path and validate DYLD_LIBRARY_PATH
-let libusb_path = ([$env.HOME "homebrew" "opt" "libusb"] | path join)
-let libusb_lib = ($libusb_path | path join "lib")
-
-# Check and configure DYLD_LIBRARY_PATH for libusb support (macOS specific)
-if ($libusb_path | path exists) {
-    # Get current DYLD_LIBRARY_PATH
-    let current_dyld = (try { $env.DYLD_LIBRARY_PATH } catch { "" })
-
-    # Check if libusb path is already in DYLD_LIBRARY_PATH
-    if not ($current_dyld | str contains $libusb_lib) {
-        # Set or prepend libusb to DYLD_LIBRARY_PATH
-        $env.DYLD_LIBRARY_PATH = if ($current_dyld | is-empty) {
-            $libusb_lib
-        } else {
-            $"($libusb_lib):$current_dyld"
-        }
-        print $"[✓] DYLD_LIBRARY_PATH set to: ($env.DYLD_LIBRARY_PATH)"
-    } else {
-        print $"[✓] DYLD_LIBRARY_PATH already contains libusb: ($libusb_lib)"
-    }
-} else {
-    print "WARNING: libusb not found at $libusb_path"
-    print "This may cause 'Device is busy' errors during analysis"
-}
 
 # Colors for output
 def log_info [msg: string] {
@@ -63,17 +35,6 @@ def check_adb [] {
     log_success $"adb is installed: ($version)"
 }
 
-# Start adb server
-def start_adb_server [] {
-    log_info "Starting adb server..."
-    try {
-        adb start-server | null
-    } catch {
-        log_warn "ADB server startup had issues, but continuing..."
-    }
-    sleep 2sec
-}
-
 # Wait for device to be ready (without killing server)
 def wait_for_device [] {
     log_info "Waiting for device to be ready..."
@@ -85,62 +46,6 @@ def wait_for_device [] {
     } catch {
         log_error "Device still not responding"
     }
-}
-
-# Verify device is actually accessible (not just listed as connected)
-def verify_device_accessible [device_serial: string] {
-    log_info $"Verifying device ($device_serial) is accessible..."
-
-    # Try to run a simple command to verify actual communication
-    let result = (try {
-        adb -s $device_serial shell getprop ro.build.version.release
-        "accessible"
-    } catch {
-        "not_accessible"
-    })
-
-    if ($result == "not_accessible") {
-        log_error "Device is listed but not responding to commands"
-        log_error ""
-        log_error "TROUBLESHOOTING:"
-        log_error "1. Look at your Android device screen for 'Allow USB debugging?' prompt"
-        log_error "2. If prompted, tap 'Always allow from this computer'"
-        log_error "3. If no prompt appears, try:"
-        log_error "   - Unlock the device (ensure screen is ON)"
-        log_error "   - Disconnect and reconnect the USB cable"
-        log_error "   - Run: adb kill-server && adb start-server"
-        log_error "4. Then run this script again"
-        return false
-    }
-
-    log_success $"Device ($device_serial) is accessible"
-    return true
-}
-
-# List connected devices
-def get_devices [] {
-    let devices = (
-        adb devices
-        | lines
-        | skip 1
-        | where { |line| $line =~ "device$" }
-        | each { |line|
-            # Extract serial - adb uses tab as delimiter between serial and status
-            if ($line | str length) > 0 {
-                ($line | split row --regex '\t' | get 0 | str trim)
-            } else {
-                ""
-            }
-        }
-    )
-
-    if ($devices | is-empty) {
-        log_error "No Android devices found."
-        log_error "Enable USB Debugging and connect device"
-        exit 1
-    }
-
-    $devices
 }
 
 # Check if MVT is installed with USB support
@@ -218,11 +123,11 @@ def validate_command_log [command_log: string] {
 
     let log_content = (open $command_log)
 
-    # Find all ERROR and CRITICAL lines (treat CRITICAL as errors)
+    # Find all CRITICAL errors (exclude informational ERROR messages like "optionally available")
     let errors = (
         $log_content
         | split row "\n"
-        | where { |line| $line =~ "ERROR" or $line =~ "CRITICAL" }
+        | where { |line| ($line =~ "CRITICAL") or (($line =~ "ERROR") and (not ($line =~ "optionally available"))) }
     )
 
     # Find all WARNING lines
@@ -245,10 +150,41 @@ def validate_command_log [command_log: string] {
     }
 }
 
-# Extract via ADB (Method A) - Run modules one by one with retry for USB timeouts
-def extract_via_adb [device_serial: string, device_dir: string] {
-    log_info $"Running check-adb for ($device_serial)..."
+# Checkpoint management for resume capability
+def get_checkpoint_file [device_dir: string] {
+    $device_dir | path join ".checkpoint.json"
+}
 
+def load_checkpoint [device_dir: string] {
+    let checkpoint_file = (get_checkpoint_file $device_dir)
+    if ($checkpoint_file | path exists) {
+        try {
+            open $checkpoint_file
+        } catch {
+            {completed_modules: [], total_modules: 0}
+        }
+    } else {
+        {completed_modules: [], total_modules: 0}
+    }
+}
+
+def save_checkpoint [device_dir: string, completed_modules: list, total_modules: int] {
+    let checkpoint_file = (get_checkpoint_file $device_dir)
+    let checkpoint = {
+        completed_modules: $completed_modules
+        total_modules: $total_modules
+        last_update: (date now | format date '%Y-%m-%d %H:%M:%S')
+    }
+    $checkpoint | to json | save -f $checkpoint_file
+    log_info $"Checkpoint saved: ($completed_modules | length)/($total_modules) modules completed"
+}
+
+def is_module_completed [device_dir: string, module_name: string] {
+    let checkpoint = (load_checkpoint $device_dir)
+    $checkpoint.completed_modules | any { |m| $m == $module_name }
+}
+
+def kill_adb [] {
     # Kill adb server before MVT analysis to avoid device busy conflicts
     # MVT needs exclusive access to the device
     log_info "Stopping adb server (MVT needs exclusive device access)..."
@@ -258,7 +194,9 @@ def extract_via_adb [device_serial: string, device_dir: string] {
         log_warn "adb server was not running"
     }
     sleep 1sec
+}
 
+def get_modules [] {
     # Get list of available modules dynamically
     log_info "Querying available modules..."
     let modules_output = (mvt-android check-adb --list-modules)
@@ -288,191 +226,189 @@ def extract_via_adb [device_serial: string, device_dir: string] {
         log_error "No modules found. This may indicate an issue with module list parsing or MVT installation."
     }
 
-    # Run each module with simple retry (no mutable variables)
-    # Test with first 2 modules only
-    for module in ($modules | first 2) {
+    $modules
+}
+
+# Extract via ADB (Method A) - Run modules one by one with resume capability
+def extract_via_adb [device_dir: string, skip_sms?: bool] {
+    log_info $"Running check-adb ..."
+
+    kill_adb
+
+    # Get list of available modules dynamically
+    log_info "Querying available modules..."
+    let modules_output = (mvt-android check-adb --list-modules)
+
+    # Parse module list - extract module names from output containing " - ModuleName"
+    let modules = get_modules
+
+    # Load checkpoint to see which modules are already completed
+    let checkpoint = (load_checkpoint $device_dir)
+    let already_completed = $checkpoint.completed_modules
+
+    if ($already_completed | length) > 0 {
+        log_warn $"Resuming from checkpoint: ($already_completed | length) modules already completed"
+        let completed_list = ($already_completed | str join ", ")
+        log_info $"Completed modules: ($completed_list)"
+    }
+
+    mut module_results = []
+    mut completed_modules = $already_completed
+
+    # Run each module - continue through all, only return on error
+    for module in $modules {
+        # Skip SMS module if skip_sms flag is set
+        if ($skip_sms == true and $module == "SMS") {
+            log_warn "Skipping SMS module (--skip-sms flag set)"
+            continue
+        }
+
+        # Skip if module already completed
+        if (is_module_completed $device_dir $module) {
+            log_warn $"Skipping already completed module: ($module)"
+            continue
+        }
+
         log_info $"Running module: ($module)..."
 
         # Create per-module output directory to preserve logs
         let module_dir = ($device_dir | path join $"module_($module)")
         mkdir $module_dir
 
-        # First attempt
+        # Run module
         let result = (try {
-            mvt-android check-adb --serial $device_serial -m $module --output $module_dir
+            mvt-android check-adb -m $module --output $module_dir
             "success"
         } catch {
             "failed"
         })
 
-        # Check for timeout/USB errors in module-specific log
+        # Validate module output
         let module_log = ($module_dir | path join "command.log")
         let validation = (validate_command_log $module_log)
 
+        # Check for USB connection timeout errors (not module-specific errors)
         let has_timeout_error = (
             $validation.errors
-            | any { |line| (($line =~ "timeout") or ($line =~ "No device found") or ($line =~ "USBErrorOther")) }
+            | any { |line| (($line =~ "Device is busy") or ($line =~ "No device found") or ($line =~ "USBErrorOther") or ($line =~ "libusb") or ($line =~ "Unable to connect")) }
         )
 
-        # Retry if timeout occurred
+        # Exit on timeout - save checkpoint and return
         if $has_timeout_error {
-            log_warn $"Module ($module) encountered USB timeout, retrying..."
-            sleep 5sec
+            log_error $"Module ($module): USB timeout/connection error"
+            log_warn "Saving checkpoint for resume on next run..."
+            save_checkpoint $device_dir $completed_modules ($modules | length)
+            return {valid: false, modules: module_results}
+        }
 
-            let result = (try {
-                mvt-android check-adb --serial $device_serial -m $module --output $module_dir
-                "success"
-            } catch {
-                "failed"
+        # Exit on validation errors - save checkpoint and return
+        if (not $validation.valid) {
+            let error_msg = $"Module ($module): " + ($validation.error_count | into string) + " errors"
+            log_error $error_msg
+            print ""
+            print "Errors found:"
+            for error in ($validation.errors | first 5) {
+                print "  ERROR: " + $error
+            }
+            if ($validation.error_count > 5) {
+                let remaining = ($validation.error_count - 5)
+                print "  ... and " + ($remaining | into string) + " more errors"
+            }
+            log_warn "Saving checkpoint for resume on next run..."
+            save_checkpoint $device_dir $completed_modules ($modules | length)
+            return {valid: false, modules: module_results}
+        }
+
+        # Module passed - add to completed and save checkpoint
+        $completed_modules = ($completed_modules | append $module)
+        save_checkpoint $device_dir $completed_modules ($modules | length)
+
+        $module_results = ($module_results | append {
+                name: $module
+                valid: $validation.valid
+                errors: $validation.errors
+                warnings: $validation.warnings
+                error_count: $validation.error_count
+                warning_count: $validation.warning_count
             })
 
-            let validation = (validate_command_log $module_log)
-            let has_timeout_error = (
-                $validation.errors
-                | any { |line| (($line =~ "timeout") or ($line =~ "No device found") or ($line =~ "USBErrorOther")) }
-            )
-
-            if not $has_timeout_error {
-                if ($validation.error_count == 0) {
-                    log_success $"Module ($module) completed successfully after retry"
-                } else {
-                    log_warn $"Module ($module) completed after retry with warnings"
-                }
-            } else {
-                log_error $"Module ($module) failed after retry"
-            }
-        } else {
-            if ($validation.error_count == 0) {
-                log_success $"Module ($module) completed successfully"
-            } else {
-                log_warn $"Module ($module) completed with warnings"
-            }
-        }
-    }
-
-    # Consolidate logs from all modules into final command.log
-    let command_log = ($device_dir | path join "command.log")
-
-    # Get list of module directories and combine logs
-    let module_log_parts = (
-        ls $device_dir
-        | where name =~ "^module_"
-        | each { |item|
-            let mod_dir_name = $item.name
-            let mod_log_path = ($item.name | path join "command.log")
-            let full_mod_log = ($device_dir | path join $mod_log_path)
-
-            if ($full_mod_log | path exists) {
-                ("=== Module: " + $mod_dir_name + " ===") + "\n" + (open $full_mod_log)
-            } else {
-                ""
-            }
-        }
-        | where { |s| ($s | str length) > 0 }
-    )
-
-    # Consolidate into single string and save
-    let consolidated_logs = ($module_log_parts | str join "\n")
-    $consolidated_logs | save $command_log
-
-    # Validate final results
-    let validation = (validate_command_log $command_log)
-
-    if ($validation.valid) {
-        let warn_msg = "ADB check completed (Warnings: " + ($validation.warning_count | into string) + ")"
+        # Module passed - log success and continue to next module
+        let warn_msg = $"Module ($module): " + ($validation.warning_count | into string) + " warnings"
         log_success $warn_msg
-        return true
-    } else {
-        let error_msg = "ADB check FAILED with " + ($validation.error_count | into string) + " errors"
-        log_error $error_msg
-        print ""
-        print "Errors found in command.log:"
-        for error in ($validation.errors | first 10) {
-            print "  ERROR: " + $error
-        }
-        if ($validation.error_count > 10) {
-            let remaining = ($validation.error_count - 10)
-            print "  ... and " + ($remaining | into string) + " more errors"
-        }
-        return false
     }
-}
 
-# Check ADB results against IOCs
-def check_adb_iocs [device_serial: string, device_dir: string] {
-    log_info "Running IOC check on ADB results..."
+    # All modules passed validation
+    log_success "All modules validated successfully"
 
-    mvt-android check-iocs $device_dir
-
-    # Validate for errors
-    let command_log = ($device_dir | path join "command.log")
-    let validation = (validate_command_log $command_log)
-
-    if ($validation.valid) {
-        let warn_msg = "IOC check completed (Warnings: " + ($validation.warning_count | into string) + ")"
-        log_success $warn_msg
-        return {matches: 0, method: "adb", valid: true}
-    } else {
-        let error_msg = "IOC check FAILED with " + ($validation.error_count | into string) + " errors"
-        log_error $error_msg
-        print ""
-        print "Errors found in command.log:"
-        for error in $validation.errors {
-            print "  ERROR: " + $error
-        }
-        return {matches: 0, method: "adb", valid: false}
-    }
-}
-
-# Extract via Backup (Method B)
-def extract_via_backup [device_serial: string, device_dir: string] {
-    log_info "Creating SMS backup..."
-
-    let backup_file = ($device_dir | path join "sms_backup.ab")
-    let backup_dir = ($device_dir | path join "backup")
-    mkdir $backup_dir
-
-    # Create backup from device
-    adb -s $device_serial backup -nocompress com.android.providers.telephony -f $backup_file
-
-    log_info "Backup created, running check-backup with IOC checking..."
-
-    # Run check-backup to analyze SMS with IOCs
-    mvt-android check-backup --output $backup_dir $backup_file
-
-    log_success "Backup IOC check completed"
-    return {matches: 0, method: "backup"}
+    return {valid: true, modules: $module_results}
 }
 
 # Generate report
-def generate_report [device_serial: string, device_dir: string] {
+def generate_report [device_dir: string, analysis_results: record] {
     log_info "Generating analysis report..."
 
-    let device_model = (try { adb -s $device_serial shell getprop ro.product.model } catch { "Unknown" })
-    let android_version = (try { adb -s $device_serial shell getprop ro.build.version.release } catch { "Unknown" })
     let timestamp = (date now | format date '%Y-%m-%d %H:%M:%S')
+
+    # Build module results section
+    let module_summary = if ($analysis_results.modules | is-empty) {
+        ""
+    } else {
+        let modules_lines = []
+        let modules_detail = (
+            $analysis_results.modules
+            | each { |m|
+                let status = (if $m.valid { "✓ PASS" } else { "✗ FAIL" })
+                let summary = "- " + $m.name + ": " + $status + " - " + ($m.error_count | into string) + " errors, " + ($m.warning_count | into string) + " warnings"
+
+                # Add error/warning details if they exist
+                let details = if ($m.error_count > 0 or $m.warning_count > 0) {
+                    let error_lines = if ($m.error_count > 0) {
+                        "  Errors:\n" + (
+                            $m.errors
+                            | first 3
+                            | each { |e| "    - " + $e }
+                            | str join "\n"
+                        ) + (if ($m.error_count > 3) { "\n    ... and " + (($m.error_count - 3) | into string) + " more errors" } else { "" })
+                    } else {
+                        ""
+                    }
+
+                    let warning_lines = if ($m.warning_count > 0) {
+                        "  Warnings:\n" + (
+                            $m.warnings
+                            | first 3
+                            | each { |w| "    - " + $w }
+                            | str join "\n"
+                        ) + (if ($m.warning_count > 3) { "\n    ... and " + (($m.warning_count - 3) | into string) + " more warnings" } else { "" })
+                    } else {
+                        ""
+                    }
+
+                    "\n" + $error_lines + (if ($error_lines != "" and $warning_lines != "") { "\n" } else { "" }) + $warning_lines
+                } else {
+                    ""
+                }
+
+                $summary + $details
+            }
+        )
+        let modules_text = ($modules_detail | str join "\n\n")
+        "\n## Module Analysis Results\n\n" + $modules_text + "\n"
+    }
 
     let report = $"# Mobile Verification Toolkit - Android Analysis Report
 
 **Generated:** ($timestamp)
-**Device:** ($device_model) ($device_serial)
-**Android Version:** ($android_version)
 
-## Verification Methods Used
+## Verification Method
 
-### Method A: Live System Check
-Analyzes (check-adb):
+### Live System Check
+MVT check-adb analysis:
 - Installed packages and applications
 - Running processes
 - Root binaries
-- System configuration (SELinux)
-- System logs (logcat)
-
-### Method B: SMS Backup Check
-Analyzes (check-backup):
-- SMS messages
-- Malicious links in messages
-- Historical attack indicators
+- System configuration and SELinux status
+- System logs via logcat
 
 ## IOC Analysis
 
@@ -481,134 +417,111 @@ This analysis used official MVT IOC checking procedures:
 - Checked against 10,885+ spyware/malware indicators
 - Sources: Amnesty International, Citizen Lab, MVT-Project
 
-## Spyware Campaigns Checked
-
-1. NSO Group Pegasus
-2. Predator Spyware
-3. RCS Lab Spyware
-4. Stalkerware
-5. Candiru (DevilsTongue)
-6. WyrmSpy & DragonEgg
-7. Quadream KingSpawn
-8. Operation Triangulation
-9. Wintego Helios
-10. NoviSpy (Serbia)
-
-## Output Files
+($module_summary)## Output Files
 
 Module-specific logs are available in:
 - module_* directories - Individual module analysis logs
-- sms_backup.ab - Android SMS backup file
-- backup directory - Backup analysis results
+- command.log - Consolidated analysis logs
 
 ## Documentation
 
 - ADB verification: https://docs.mvt.re/en/latest/android/adb/
-- Backup verification: https://docs.mvt.re/en/latest/android/backup/
 - IOC procedures: https://docs.mvt.re/en/latest/iocs/
 
 Generated: ($timestamp)
 "
 
-    $report | save ($device_dir | path join "ANALYSIS_REPORT.md")
+    $report | save -f ($device_dir | path join "ANALYSIS_REPORT.md")
     log_success "Report generated"
 }
 
 # Analyze device
-def analyze_device [device_serial: string] {
-    let device_dir = ($output_dir | path join $"device-($device_serial)")
+def analyze_device [skip_sms?: bool, resume?: bool] {
+    let device_dir = ($output_dir | path join $"device")
+
+    # Only remove old directory if NOT resuming
+    if not $resume {
+        if ($device_dir | path exists) {
+            log_info "Cleaning old analysis results..."
+            rm -r $device_dir
+        }
+    } else {
+        if not ($device_dir | path exists) {
+            log_warn "Resume requested but no previous analysis found - starting fresh"
+        } else {
+            log_info "Resuming from previous analysis checkpoint..."
+        }
+    }
 
     mkdir $device_dir
 
     log_info "=========================================="
-    log_info $"Analyzing: ($device_serial)"
+    if $resume {
+        log_info "Resuming device analysis..."
+    } else {
+        log_info "Starting new device analysis..."
+    }
     log_info $"Output: ($device_dir)"
     log_info "=========================================="
 
-    # Verify device is actually accessible before proceeding
-    if not (verify_device_accessible $device_serial) {
-        log_error "Cannot proceed - device not accessible"
-        log_error "Fix the connection issues above, then run the script again"
-        return false
-    }
-
     # Method A: ADB Check
-    let adb_success = (extract_via_adb $device_serial $device_dir)
+    let adb_success = (extract_via_adb $device_dir $skip_sms)
 
-    if not $adb_success {
-        log_error "ADB check failed - analysis cannot continue"
-        log_error "Please check command.log for details"
-        return false
+    if not $adb_success.valid {
+       log_error "ADB check failed - analysis cannot continue"
+       log_error "Checkpoint saved. Run with --resume to continue from where you left off."
+       return false
     }
 
-    let ioc_results = (check_adb_iocs $device_serial $device_dir)
+    # Generate report
+    generate_report $device_dir $adb_success
 
-    if ($ioc_results.valid == false) {
-        log_error "IOC check failed - analysis cannot continue"
-        log_error "Please check command.log for details"
-        return false
+    print ""
+    log_success $"Analysis SUCCESSFUL"
+    print $"Output saved to: ($device_dir)"
+    print ""
+
+    # Clean up checkpoint on successful completion
+    let checkpoint_file = (get_checkpoint_file $device_dir)
+    try {
+        rm $checkpoint_file
+        log_info "Checkpoint cleaned up"
+    } catch {
+        # Ignore if checkpoint doesn't exist
     }
-
-    # Method B: Backup Check
-    extract_via_backup $device_serial $device_dir
-
-    # Generate report only if validation passed
-    generate_report $device_serial $device_dir
-
-    print ""
-    log_success $"Analysis SUCCESSFUL for ($device_serial)"
-    ls -lh $device_dir | tail -n +2
-    print ""
 
     return true
 }
 
 # Main
-def main [] {
+def main [--skip-sms, --resume] {
     print (ansi blue)
     print "MVT - Mobile Verification Toolkit - Android Analysis"
     print (ansi reset)
     print ""
 
-    log_info "Pre-flight checks..."
-    check_adb
-    check_mvt
+    if $skip_sms {
+        log_warn "SMS module will be skipped"
+    }
+
+    if $resume {
+        log_warn "Resume mode enabled - will skip already completed modules"
+    }
+
+    if not $resume {
+        log_info "Pre-flight checks..."
+        check_adb
+        check_mvt
+
+        log_info "Downloading IOCs..."
+        download_iocs
+    } else {
+        log_info "Resume mode - skipping pre-flight checks and IOC download"
+    }
 
     mkdir $output_dir
     log_success $"Output: ($output_dir)"
 
-    # Start ADB server
-    start_adb_server
-
-    download_iocs
-
-    log_info "Scanning for devices..."
-    let devices = (get_devices)
-
-    let device_count = ($devices | length)
-    print $"(ansi blue)[*](ansi reset) Found ($device_count) device\(s\)"
-
     # Run analysis on each device and collect results
-    let results = (
-        $devices
-        | each { |device|
-            {device: $device, success: (analyze_device $device)}
-        }
-    )
-
-    # Count successes and failures
-    let success_count = ($results | where {|r| $r.success == true} | length)
-    let failed_count = ($results | where {|r| $r.success == false} | length)
-
-    print ""
-    log_info "=========================================="
-    if ($failed_count > 0) {
-        log_error "Analysis FAILED for some devices!"
-        log_error $"Successful: ($success_count) / Failed: ($failed_count)"
-        log_error "Check command.log files for error details"
-    } else {
-        log_success "All devices analyzed successfully!"
-        log_success $"Successful: ($success_count)"
-    }
-    log_info "=========================================="
+    let result = analyze_device $skip_sms $resume
 }
