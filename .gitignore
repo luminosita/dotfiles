@@ -6,3 +6,4 @@ devbox.lock
 .stow-local-ignore
 /.env
 .kube/cache
+out/
