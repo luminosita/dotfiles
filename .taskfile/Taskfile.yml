@@ -40,16 +40,21 @@ tasks:
     deps:
       - check:devbox
     silent: true
+    internal: true 
     cmds:
       - rm -rf dist && mkdir -p dist
-      - echo "Building setup.nu..."
-      - nu cmd/build.nu --yes --main-script cmd/setup.nu --output dist/setup.nu
+      - for: { var: SCRIPTS }
+        cmd: |
+          echo "Building {{.ITEM}}..."
+          nu cmd/build.nu --yes --main-script cmd/{{.ITEM}} --output dist/{{.ITEM}}
 
   build:assembly:
     desc: "Build standalone setup script and container images"
     silent: true
     deps:
       - task: build:scripts
+        vars:
+          SCRIPTS: ['setup.nu']
     cmds:
       - |
         mkdir -p dist/default/assembly
