@@ -5,6 +5,7 @@
     "git.enableSmartCommit": true,
     "diffEditor.ignoreTrimWhitespace": false,
     "[markdown]": {
+        "editor.tabSize": 2,
         "diffEditor.ignoreTrimWhitespace": false
     },
     "yaml.customTags": [],
@@ -42,7 +43,7 @@
     "markdown-preview-enhanced.enablePreviewZenMode": false,
     "redhat.telemetry.enabled": false,
     "[yaml]": {
-        "diffEditor.ignoreTrimWhitespace": true
+        "diffEditor.ignoreTrimWhitespace": false
     },
     "[go]": {
         "editor.insertSpaces": false,

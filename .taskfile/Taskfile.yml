@@ -1,0 +1,332 @@
+version: '3'
+
+# Setup Script - Development Tasks
+# Consolidated CLI interface for all development operations
+
+vars:
+  VERSION: "$(VERSION)"
+  REGISTRY: localhost/luminosita
+  CONTAINER_TOOL: podman
+
+tasks:
+  check:
+    desc: Run pre-commit checks (tests and linting)
+    deps:
+      - check:devbox
+    cmds:
+      - task: test:verbose
+      - task: hooks:run
+
+  check:devbox:
+    desc: Verify running inside devbox shell
+    internal: true
+    silent: true
+    cmds:
+      - |
+        if [ -z "$DEVBOX_SHELL_ENABLED" ]; then
+          echo "❌ Error: Not running in devbox shell"
+          echo "   Run 'devbox shell' first to enter the development environment"
+          exit 1
+        fi
+
+  build:
+    desc: "Build standalone setup script and container images"
+    silent: true
+    deps:
+      - task: build:assembly
+
+  build:scripts:
+    desc: "Build standalone setup script (all languages)"
+    deps:
+      - check:devbox
+    silent: true
+    cmds:
+      - rm -rf dist && mkdir -p dist
+      - echo "Building setup.nu..."
+      - nu cmd/build.nu --yes --main-script cmd/setup.nu --output dist/setup.nu
+
+  build:assembly:
+    desc: "Build standalone setup script and container images"
+    silent: true
+    deps:
+      - task: build:scripts
+    cmds:
+      - |
+        mkdir -p dist/default/assembly
+        cp dist/setup.nu dist/default/setup.nu
+
+  # ====================
+  # Tests
+  # ====================
+
+  test:
+    desc: Run all unit tests with summary reporting
+    deps:
+      - check:devbox
+    cmds:
+      - nu tests/test.nu {{.CLI_ARGS}}
+
+  test:verbose:
+    desc: Run all unit tests with detailed assertion reporting
+    deps:
+      - check:devbox
+    cmds:
+      - task: test
+        vars:
+          CLI_ARGS: "--verbose {{.CLI_ARGS}}"
+
+  test:unit:
+    desc: Run unit tests only with summary reporting
+    deps:
+      - check:devbox
+    cmds:
+      - nu tests/test.nu --unit {{.CLI_ARGS}}
+
+  test:unit:verbose:
+    desc: Run unit tests only with detailed assertion reporting
+    cmds:
+      - task: test:unit
+        vars:
+          CLI_ARGS: "--verbose {{.CLI_ARGS}}"
+
+  # ====================
+  # Integration Tests
+  # ====================
+
+  test:integration:
+    desc: Run only previously failed tests
+    cmds:
+      - nu tests/test.nu --integration {{.CLI_ARGS}}
+
+  test:integration:verbose:
+    desc: Run only previously failed tests with detailed reporting
+    cmds:
+      - task: test:failed
+        vars:
+          CLI_ARGS: "--verbose {{.CLI_ARGS}}"
+
+  test:integration:cluster:
+    cmds:
+      - task: test:kind:create
+      - defer: test:kind:teardown
+      - task: test:integration
+        vars:
+          CLI_ARGS: "{{.CLI_ARGS}}"
+
+  test:integration:cluster:verbose:
+    desc: Run integration tests with verbose output (create → test → teardown) | Pass extra args with -- (e.g., task test:integration:verbose -- --failed)
+    cmds:
+      - task: test:integration:cluster
+        vars:
+          CLI_ARGS: "--verbose {{.CLI_ARGS}}"
+
+  # ====================
+  # Failed Tests
+  # ====================
+
+  test:failed:
+    desc: Run only previously failed tests
+    cmds:
+      - nu tests/test.nu --failed {{.CLI_ARGS}}
+
+  test:failed:verbose:
+    desc: Run only previously failed tests with detailed reporting
+    cmds:
+      - task: test:failed
+        vars:
+          CLI_ARGS: "--verbose {{.CLI_ARGS}}"
+
+  # ====================
+  # E2E Tests
+  # ====================
+
+  test:e2e:cluster:
+    desc: Run end-to-end tests with cluster lifecycle (build → create → test → teardown) | Pass extra args with -- (e.g., task test:e2e -- --failed)
+    cmds:
+      - task: test:kind:create
+      - defer: test:kind:teardown
+      - task: test:e2e
+
+  test:e2e:cluster:verbose:
+    desc: Run end-to-end tests with verbose output (build → create → test → teardown) | Pass extra args with -- (e.g., task test:e2e:verbose -- --failed)
+    cmds:
+      - task: test:kind:create
+      - defer: test:kind:teardown
+      - task: test:e2e:verbose
+
+  test:e2e:
+    desc: Run end-to-end tests with verbose output (build → create → test → teardown) | Pass extra args with -- (e.g., task test:e2e:verbose -- --failed)
+    deps:
+      - task: release:snapshot:package
+    cmds:
+      - nu tests/test.nu --e2e {{.CLI_ARGS}}
+
+  test:e2e:verbose:
+    desc: Run end-to-end tests with cluster lifecycle (build → create → test → teardown) | Pass extra args with -- (e.g., task test:e2e -- --failed)
+    cmds:
+      - task: test:e2e
+        vars:
+          CLI_ARGS: "--verbose {{.CLI_ARGS}}"
+
+  # ====================
+  # Kind Cluster
+  # ====================
+  test:kind:create:
+    desc: Create kind cluster for integration tests (kubeconfig saved to ./tmp/, uses podman)
+    deps:
+      - check:devbox
+    cmds:
+      - mkdir -p tmp
+      - export KIND_EXPERIMENTAL_PROVIDER=podman && kind create cluster --name k8s-test --config tests/integration/kind-config.yaml --kubeconfig $(pwd)/tmp/kubeconfig
+      - kubectl delete storageclass standard --kubeconfig $(pwd)/tmp/kubeconfig
+      - kubectl delete ns local-path-storage --kubeconfig $(pwd)/tmp/kubeconfig
+
+  test:kind:teardown:
+    desc: Delete kind cluster for integration tests and clean up kubeconfig
+    deps:
+      - check:devbox
+    cmds:
+      - export KIND_EXPERIMENTAL_PROVIDER=podman && kind delete cluster --name k8s-test
+      - rm -rf tmp/kubeconfig
+
+  # ====================
+  # Containers
+  # ====================
+  build:containers:generate:
+    desc: "Build container image and tag with version"
+    deps:
+      - build:assembly
+    silent: true
+    cmds:
+      - echo "🐳 Building container image..."
+      - |
+        echo "📦 Using ${CONTAINER_TOOL} to build image..."
+        echo "   Registry: {{.REGISTRY}}"
+        echo "   Image: {{.IMAGE_NAME}}"
+        echo "   Version: {{.VERSION}}"
+
+        # Build image from Containerfile
+        {{.CONTAINER_TOOL}} build \
+          -f {{.FILE}} \
+          -t "{{.IMAGE_NAME}}:{{.VERSION}}" \
+          {{.DIR}}
+        echo "✅ Container image built successfully"
+        echo "   - {{.IMAGE_NAME}}:{{.VERSION}}"
+
+  build:containers:push:
+    desc: "Push container image to Docker Hub"
+    deps:
+      - check:devbox
+    silent: true
+    cmds:
+      - echo "🚀 Pushing container image to Docker Hub..."
+      - |
+        echo "📤 Using ${CONTAINER_TOOL} to push image..."
+        echo "   Image: {{.IMAGE_NAME}}:{{.VERSION}}"
+
+        # Push both tags
+        ${CONTAINER_TOOL} push "${IMAGE_NAME}:{{.VERSION}}"
+        echo "✅ Container images pushed successfully"
+        echo "   - {{.IMAGE_NAME}}:{{.VERSION}}"
+
+  # ====================
+  # Pre-commit Hooks
+  # ====================
+
+  hooks:install:
+    desc: Install pre-commit hooks for Go (using pre-commit framework)
+    cmds:
+      - pre-commit install
+
+  hooks:run:
+    desc: Run pre-commit hooks manually on all files
+    cmds:
+      - pre-commit run --all-files
+
+  hooks:update:
+    desc: Update pre-commit hooks to latest versions
+    cmds:
+      - pre-commit autoupdate
+      - echo "✅ Pre-commit hooks updated"
+
+  hooks:uninstall:
+    desc: Uninstall pre-commit hooks
+    cmds:
+      - pre-commit uninstall
+      - echo "✅ Pre-commit hooks uninstalled"
+
+# ====================
+# Release Management
+# ====================
+  release:prepare:
+    desc: "Prepare release (run tests and checks before release)"
+    cmds:
+      - echo "🔍 Running pre-release checks..."
+      - task: check
+      - echo "✅ Release preparations complete"
+
+  release:dry-run:
+    internal: true
+    desc: "Dry-run stable release (preview without publishing)"
+    cmds:
+      - task: release
+        vars:
+          CLI_ARGS: "--dry-run {{.CLI_ARGS}}"
+
+  release:snapshot:dry-run:
+    desc: "Dry-run snapshot release (preview without publishing)"
+    cmds:
+      - task: release:snapshot
+        vars:
+          CLI_ARGS: "--dry-run {{.CLI_ARGS}}"
+
+  release:
+    desc: "Create stable release to Codeberg (production version, stable release)"
+    deps:
+      - release:prepare
+      - build:assembly
+    cmds:
+      - echo "📦 Creating release to Codeberg..."
+      - jreleaser-cli full-release -c .jreleaser.yml --strict {{.CLI_ARGS}}
+      - echo "✅ Stable release complete"
+
+  release:snapshot:
+    desc: "Create snapshot release to Codeberg (development version, pre-release)"
+    deps:
+      - build:assembly
+    cmds:
+      - echo "📦 Creating snapshot release to Codeberg..."
+      - jreleaser-cli full-release -c .jreleaser.snapshot.yml {{.CLI_ARGS}}
+      - echo "✅ Snapshot release complete"
+
+  release:package:
+    deps:
+      - build:assembly
+    cmds:
+      - echo "📦 Creating package ..."
+      - jreleaser-cli package -c .jreleaser.yml --strict {{.CLI_ARGS}}
+      - echo "✅ Snapshot complete"
+
+  release:package:snapshot:
+    desc: "Create snapshot package"
+    cmds:
+      - echo "📦 Creating snapshot package ..."
+      - jreleaser-cli package -c .jreleaser.snapshot.yml {{.CLI_ARGS}}
+      - echo "✅ Snapshot package complete"
+
+  release:changelog:
+    desc: "Generate changelog for commits since last release"
+    deps:
+      - check:devbox
+    cmds:
+      - echo "📝 Generating changelog..."
+      - jreleaser-cli changelog {{.CLI_ARGS}}
+      - echo "✅ Changelog generated"
+
+# ====================
+# Misc
+# ====================
+  help:
+    desc: Show available tasks
+    cmds:
+      - task: --list
