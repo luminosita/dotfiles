@@ -58,6 +58,7 @@ disabled = false
 disabled = true
 
 [kubernetes]
+style = "bold blue"
 disabled = false
 
 [shell]
