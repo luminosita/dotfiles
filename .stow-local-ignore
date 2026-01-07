@@ -1,5 +1,6 @@
 .gitignore
 flake.*
+devbox.*
 gcloud
 .git
 README.md
@@ -10,3 +11,8 @@ packages.yaml
 config.yaml
 CLAUDE.md
 bootstrap.sh
+mvt
+out
+.venv
+.env
+.devbox

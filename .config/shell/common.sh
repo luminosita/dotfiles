@@ -1,6 +1,30 @@
 # Common shell configuration for both bash and zsh
 # Source this file from .bashrc or .zshrc
 
+# Toggle Starship theme between light and dark
+theme() {
+    if [[ "$STARSHIP_CONFIG" == *"starship_light.toml" ]]; then
+        export STARSHIP_CONFIG="$DARK_CONFIG"
+        echo "🎨 Starship theme switched to: dark"
+    else
+        export STARSHIP_CONFIG="$LIGHT_CONFIG"
+        echo "🎨 Starship theme switched to: light"
+    fi
+
+    eval_starship
+}
+
+eval_starship() {
+    # Starship prompt (if installed)
+    if command -v starship &> /dev/null; then
+        if [[ -n "$ZSH_VERSION" ]]; then
+            eval "$(starship init zsh)"
+        elif [[ -n "$BASH_VERSION" ]]; then
+            eval "$(starship init bash)"
+        fi
+    fi
+}
+
 # History settings
 export HISTSIZE=10000
 export SAVEHIST=10000
@@ -27,14 +51,13 @@ if [[ -d "$HOME/homebrew/bin" ]]; then
     export HOMEBREW_LOGS="$HOME/.cache/homebrew/Logs"
 fi
 
-# Starship prompt (if installed)
-if command -v starship &> /dev/null; then
-    if [[ -n "$ZSH_VERSION" ]]; then
-        eval "$(starship init zsh)"
-    elif [[ -n "$BASH_VERSION" ]]; then
-        eval "$(starship init bash)"
-    fi
-fi
+CONFIG_DIR="${HOME}/.config"
+DARK_CONFIG="${CONFIG_DIR}/starship_dark.toml"
+LIGHT_CONFIG="${CONFIG_DIR}/starship_light.toml"
+
+export STARSHIP_CONFIG="$DARK_CONFIG"
+
+eval_starship
 
 # Thefuck (if installed)
 if command -v thefuck &> /dev/null; then
