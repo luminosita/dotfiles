@@ -112,7 +112,7 @@ tasks:
 
   test:integration:cluster:
     cmds:
-      - task: test:kind:create
+      - task: test:kind:setup
       - defer: test:kind:teardown
       - task: test:integration
         vars:
@@ -148,14 +148,14 @@ tasks:
   test:e2e:cluster:
     desc: Run end-to-end tests with cluster lifecycle (build → create → test → teardown) | Pass extra args with -- (e.g., task test:e2e -- --failed)
     cmds:
-      - task: test:kind:create
+      - task: test:kind:setup
       - defer: test:kind:teardown
       - task: test:e2e
 
   test:e2e:cluster:verbose:
     desc: Run end-to-end tests with verbose output (build → create → test → teardown) | Pass extra args with -- (e.g., task test:e2e:verbose -- --failed)
     cmds:
-      - task: test:kind:create
+      - task: test:kind:setup
       - defer: test:kind:teardown
       - task: test:e2e:verbose
 
@@ -176,7 +176,7 @@ tasks:
   # ====================
   # Kind Cluster
   # ====================
-  test:kind:create:
+  test:kind:setup:
     desc: Create kind cluster for integration tests (kubeconfig saved to ./tmp/, uses podman)
     deps:
       - check:devbox
