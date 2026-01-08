@@ -141,6 +141,23 @@ tasks:
         vars:
           CLI_ARGS: "--verbose {{.CLI_ARGS}}"
 
+  test:failed:cluster:
+    desc: Run end-to-end tests with cluster lifecycle (build → create → test → teardown) | Pass extra args with -- (e.g., task test:e2e -- --failed)
+    cmds:
+      - task: test:kind:start
+      - defer: { task: test:kind:stop }
+      - task: test:failed
+        vars:
+          CLI_ARGS: "{{.CLI_ARGS}}"
+
+  test:failed:cluster:verbose:
+    desc: Run end-to-end tests with verbose output (build → create → test → teardown) | Pass extra args with -- (e.g., task test:e2e:verbose -- --failed)
+    cmds:
+      - task: test:failed:cluster
+        vars:
+          CLI_ARGS: "--verbose {{.CLI_ARGS}}"
+
+
   # ====================
   # E2E Tests
   # ====================
