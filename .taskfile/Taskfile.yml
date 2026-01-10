@@ -66,15 +66,13 @@ tasks:
 
   test:
     desc: Run all unit tests with summary reporting
-    deps:
-      - check:devbox
     cmds:
-      - nu tests/test.nu {{.CLI_ARGS}}
+      - task: test:unit 
+        vars:
+          CLI_ARGS: "--verbose {{.CLI_ARGS}}"
 
   test:verbose:
     desc: Run all unit tests with detailed assertion reporting
-    deps:
-      - check:devbox
     cmds:
       - task: test
         vars:
