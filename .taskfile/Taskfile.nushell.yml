@@ -83,7 +83,7 @@ tasks:
     deps:
       - check:devbox
     cmds:
-      - nu tests/test.nu --unit {{.CLI_ARGS}}
+      - nu lib/shared/test.nu --unit {{.CLI_ARGS}}
 
   test:unit:verbose:
     desc: Run unit tests only with detailed assertion reporting
@@ -99,7 +99,7 @@ tasks:
   test:integration:
     desc: Run only previously failed tests
     cmds:
-      - nu tests/test.nu --integration {{.CLI_ARGS}}
+      - nu lib/shared/test.nu --integration {{.CLI_ARGS}}
 
   test:integration:verbose:
     desc: Run only previously failed tests with detailed reporting
@@ -130,7 +130,7 @@ tasks:
   test:failed:
     desc: Run only previously failed tests
     cmds:
-      - nu tests/test.nu --failed {{.CLI_ARGS}}
+      - nu lib/shared/test.nu --failed {{.CLI_ARGS}}
 
   test:failed:verbose:
     desc: Run only previously failed tests with detailed reporting
@@ -165,7 +165,7 @@ tasks:
     deps:
       - task: release:snapshot:package
     cmds:
-      - nu tests/test.nu --e2e {{.CLI_ARGS}}
+      - nu lib/shared/test.nu --e2e {{.CLI_ARGS}}
 
   test:e2e:verbose:
     desc: Run end-to-end tests with cluster lifecycle (build → create → test → teardown) | Pass extra args with -- (e.g., task test:e2e -- --failed)
