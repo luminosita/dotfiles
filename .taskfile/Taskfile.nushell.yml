@@ -4,9 +4,12 @@ version: '3'
 # Consolidated CLI interface for all development operations
 
 vars:
-  VERSION: "$(VERSION)"
-  REGISTRY: localhost/luminosita
+  VERSION: "v$(cat VERSION)"
+  VERSION_SNAPSHOT: "v$(cat VERSION)-snapshot"
+  LOCAL_REGISTRY: localhost/luminosita
+  REMOTE_REGISTRY: docker.io/luminosita
   CONTAINER_TOOL: podman
+  INCLUDE_LATEST: false
 
 tasks:
   check:
@@ -220,7 +223,7 @@ tasks:
   # ====================
   # Containers
   # ====================
-  build:containers:generate:
+  containers:build:
     desc: "Build container image and tag with version"
     deps:
       - build:assembly
@@ -228,8 +231,8 @@ tasks:
     cmds:
       - echo "🐳 Building container image..."
       - |
-        echo "📦 Using ${CONTAINER_TOOL} to build image..."
-        echo "   Registry: {{.REGISTRY}}"
+        echo "📦 Using {{.CONTAINER_TOOL}} to build image..."
+        echo "   LOCAL_REGISTRY: {{.LOCAL_REGISTRY}}"
         echo "   Image: {{.IMAGE_NAME}}"
         echo "   Version: {{.VERSION}}"
 
@@ -241,7 +244,13 @@ tasks:
         echo "✅ Container image built successfully"
         echo "   - {{.IMAGE_NAME}}:{{.VERSION}}"
 
-  build:containers:push:
+  containers:build:snapshot:
+    cmds:
+      - task: containers:build
+        vars:
+          VERSION: "{{.VERSION_SNAPSHOT}}"
+
+  containers:push:
     desc: "Push container image to Docker Hub"
     deps:
       - check:devbox
@@ -249,13 +258,41 @@ tasks:
     cmds:
       - echo "🚀 Pushing container image to Docker Hub..."
       - |
-        echo "📤 Using ${CONTAINER_TOOL} to push image..."
-        echo "   Image: {{.IMAGE_NAME}}:{{.VERSION}}"
+        echo "🏷️  Retagging image for Docker Hub..."
+        {{.CONTAINER_TOOL}} tag "{{.LOCAL_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}" "{{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
+        echo "   - {{.LOCAL_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}} → {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
 
-        # Push both tags
-        ${CONTAINER_TOOL} push "${IMAGE_NAME}:{{.VERSION}}"
+        {{if eq .INCLUDE_LATEST "true"}}
+        {{.CONTAINER_TOOL}} tag "{{.LOCAL_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}" "{{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:latest"
+        echo "   - {{.LOCAL_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}} → {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:latest"
+        {{end}}
+      - |
+        echo "📤 Using {{.CONTAINER_TOOL}} to push image..."
+        echo "   Image: {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
+
+        # Push to Docker Hub
+        {{.CONTAINER_TOOL}} push "{{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
         echo "✅ Container images pushed successfully"
-        echo "   - {{.IMAGE_NAME}}:{{.VERSION}}"
+        echo "   - {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
+
+        {{if eq .INCLUDE_LATEST "true"}}
+        echo "📤 Pushing latest tag..."
+        {{.CONTAINER_TOOL}} push "{{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:latest"
+        echo "   - {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:latest"
+        {{end}}
+
+  containers:push:snapshot:
+    cmds:
+      - task: containers:push
+        vars:
+          VERSION: "{{.VERSION_SNAPSHOT}}"
+
+  containers:push:latest:
+    cmds:
+      - task: containers:push
+        vars:
+          VERSION: "{{.VERSION}}"
+          INCLUDE_LATEST: true
 
   # ====================
   # Pre-commit Hooks
@@ -356,7 +393,7 @@ tasks:
 # ====================
 # Misc
 # ====================
-  help:
+  default:
     desc: Show available tasks
     cmds:
-      - task: --list
+      - task -a
