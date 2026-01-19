@@ -6,10 +6,20 @@ version: '3'
 vars:
   VERSION: "v$(cat VERSION)"
   VERSION_SNAPSHOT: "v$(cat VERSION)-snapshot"
-  LOCAL_REGISTRY: localhost/luminosita
-  REMOTE_REGISTRY: docker.io/luminosita
+  REGISTRY: docker.io/luminosita
+  CONTAINER_IMAGE_NAME: "{{.REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
+  CONTAINER_IMAGE_NAME_SNAPSHOT: "{{.REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION_SNAPSHOT}}"
+  CONTAINER_IMAGE_NAME_LATEST: "{{.REGISTRY}}/{{.IMAGE_NAME}}:latest"
   CONTAINER_TOOL: podman
-  INCLUDE_LATEST: false
+  INCLUDE_LATEST: "false"
+  TALOS_VERSION: v1.12.1
+  TALOS_CONTROL_PLANE_RAM: 4.0GiB
+  TALOS_CONTROL_PLANE_IP: 10.5.0.2
+  TALOS_CONTROL_PLANE_CIDR: "{{.TALOS_CONTROL_PLANE_IP}}/24"
+  TALOS_GATEWAY_IP: 10.5.0.1
+  TALOS_DEFAULT_ROUTE: 10.0.0.0/8
+  TALOS_SUBNET: 10.5.0.0/24
+  TALOS_IMAGE_FACTORY_API_URL: https://factory.talos.dev/schematics
 
 tasks:
   check:
@@ -201,10 +211,10 @@ tasks:
     deps:
       - check:devbox
     cmds:
-      - mkdir -p tmp
-      - export KIND_EXPERIMENTAL_PROVIDER=podman && kind create cluster --name k8s-test --config tests/integration/kind-config.yaml --kubeconfig $(pwd)/tmp/kubeconfig
-      - kubectl delete storageclass standard --kubeconfig $(pwd)/tmp/kubeconfig
-      - kubectl delete ns local-path-storage --kubeconfig $(pwd)/tmp/kubeconfig
+      - mkdir -p out
+      - export KIND_EXPERIMENTAL_PROVIDER=podman && kind create cluster --name k8s-test --config tests/integration/kind-config.yaml --kubeconfig $(pwd)/out/kubeconfig
+      - kubectl delete storageclass standard --kubeconfig $(pwd)/out/kubeconfig
+      - kubectl delete ns local-path-storage --kubeconfig $(pwd)/out/kubeconfig
 
   test:kind:stop:
     desc: Delete kind cluster for integration tests and clean up kubeconfig
@@ -221,6 +231,73 @@ tasks:
       - task: test:kind:start
 
   # ====================
+  # Talos Cluster
+  # ====================
+  test:talos:patch:
+    cmds:
+      - |
+        mkdir -p out
+        BOOTSTRAP_MANIFEST=$(kustomize build {{.TALOS_BOOTSTRAP_KUSTOMIZATION_DIR}} | jq -Rs .)
+        TEMPLATE_VARS=$(cat <<EOF
+        {
+          "bootstrapManifest": $BOOTSTRAP_MANIFEST,
+          "gateway": "{{.TALOS_GATEWAY_IP}}",
+          "node_ip": "{{.TALOS_CONTROL_PLANE_CIDR}}",
+          "subnet": "{{.TALOS_SUBNET}}",
+          "route": "{{.TALOS_DEFAULT_ROUTE}}"
+        }
+        EOF
+        )
+        echo $TEMPLATE_VARS | gomplate -d 'config=stdin://?type=application/json' -f {{.TALOS_PATCH_FILE}} -o ./out/talos-patch.yaml
+
+  test:talos:schematic:
+    cmds:
+      - mkdir -p out
+      - curl -s -X POST --data-binary @{{.TALOS_SCHEMATIC}} {{.TALOS_IMAGE_FACTORY_API_URL}} | jq -r '.id' > ./out/TALOS_SCHEMATIC_ID
+
+  test:talos:start:
+    desc: Create kind cluster for integration tests (kubeconfig saved to ./out/, uses podman)
+    deps:
+      - check:devbox
+      - task: test:talos:patch
+      - task: test:talos:schematic
+    cmds:
+      - |
+        # Changing working dir to avoid creation of talos config files in project root
+        cd ./out && rm -f talosconfig && rm -f kubeconfig
+        (sudo talosctl cluster create qemu \
+          --schematic-id=$(cat ./TALOS_SCHEMATIC_ID) \
+          --talos-version={{.TALOS_VERSION}} \
+          --controlplanes=1 \
+          --workers=0 \
+          --talosconfig-destination=./talosconfig \
+          --config-patch-controlplanes @./talos-patch.yaml \
+          --presets disk-image \
+          --memory-controlplanes {{.TALOS_CONTROL_PLANE_RAM}} && \
+          echo "✅ Talos cluster deployed") || true
+      - |
+        echo "📦 Generating cluster configuration files ..."
+        sudo chown $USER out/talosconfig
+        export TALOSCONFIG=./out/talosconfig
+        export KUBECONFIG=./out/kubeconfig
+        talosctl config nodes {{.TALOS_CONTROL_PLANE_IP}}
+        talosctl kubeconfig ./out/kubeconfig
+        echo "✅ Talos cluster ready"
+
+  test:talos:stop:
+    desc: Delete kind cluster for integration tests and clean up kubeconfig
+    deps:
+      - check:devbox
+    cmds:
+      - sudo talosctl cluster destroy
+
+  test:talos:restart:
+    desc: Delete kind cluster for integration tests and clean up kubeconfig
+    cmds:
+      - task: test:talos:stop
+      - task: test:talos:start
+
+  # ====================
   # Containers
   # ====================
   containers:build:
@@ -232,17 +309,17 @@ tasks:
       - echo "🐳 Building container image..."
       - |
         echo "📦 Using {{.CONTAINER_TOOL}} to build image..."
-        echo "   LOCAL_REGISTRY: {{.LOCAL_REGISTRY}}"
+        echo "   REGISTRY: {{.REGISTRY}}"
         echo "   Image: {{.IMAGE_NAME}}"
         echo "   Version: {{.VERSION}}"
 
         # Build image from Containerfile
         {{.CONTAINER_TOOL}} build \
           -f {{.FILE}} \
-          -t "{{.IMAGE_NAME}}:{{.VERSION}}" \
+          -t "{{.CONTAINER_IMAGE_NAME}}" \
           {{.DIR}}
         echo "✅ Container image built successfully"
-        echo "   - {{.IMAGE_NAME}}:{{.VERSION}}"
+        echo "   - {{.CONTAINER_IMAGE_NAME}}"
 
   containers:build:snapshot:
     cmds:
@@ -258,41 +335,36 @@ tasks:
     cmds:
       - echo "🚀 Pushing container image to Docker Hub..."
       - |
-        echo "🏷️  Retagging image for Docker Hub..."
-        {{.CONTAINER_TOOL}} tag "{{.LOCAL_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}" "{{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
-        echo "   - {{.LOCAL_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}} → {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
-
         {{if eq .INCLUDE_LATEST "true"}}
-        {{.CONTAINER_TOOL}} tag "{{.LOCAL_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}" "{{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:latest"
-        echo "   - {{.LOCAL_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}} → {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:latest"
+        {{.CONTAINER_TOOL}} tag "{{.CONTAINER_IMAGE_NAME}}" "{{.CONTAINER_IMAGE_NAME_LATEST}}"
+        echo "   - {{.CONTAINER_IMAGE_NAME}} → {{.CONTAINER_IMAGE_NAME_LATEST}}"
         {{end}}
       - |
         echo "📤 Using {{.CONTAINER_TOOL}} to push image..."
-        echo "   Image: {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
+        echo "   Image: {{.CONTAINER_IMAGE_NAME}}"
 
         # Push to Docker Hub
-        {{.CONTAINER_TOOL}} push "{{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
+        {{.CONTAINER_TOOL}} push "{{.CONTAINER_IMAGE_NAME}}"
         echo "✅ Container images pushed successfully"
-        echo "   - {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:{{.VERSION}}"
+        echo "   - {{.CONTAINER_IMAGE_NAME}}"
 
         {{if eq .INCLUDE_LATEST "true"}}
         echo "📤 Pushing latest tag..."
-        {{.CONTAINER_TOOL}} push "{{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:latest"
-        echo "   - {{.REMOTE_REGISTRY}}/{{.IMAGE_NAME}}:latest"
+        {{.CONTAINER_TOOL}} push "{{.CONTAINER_IMAGE_NAME_LATEST}}"
+        echo "   - {{.CONTAINER_IMAGE_NAME_LATEST}}"
         {{end}}
 
   containers:push:snapshot:
     cmds:
       - task: containers:push
         vars:
-          VERSION: "{{.VERSION_SNAPSHOT}}"
+          CONTAINER_IMAGE_NAME: "{{.CONTAINER_IMAGE_NAME_SNAPSHOT}}"
 
   containers:push:latest:
     cmds:
       - task: containers:push
         vars:
-          VERSION: "{{.VERSION}}"
-          INCLUDE_LATEST: true
+          INCLUDE_LATEST: "true"
 
   # ====================
   # Pre-commit Hooks
