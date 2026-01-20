@@ -465,6 +465,30 @@ tasks:
 # ====================
 # Misc
 # ====================
+  environment:
+    cmds:
+      - mkdir -p cmd lib
+      - ln -sf ../../nu-shared/cmd/build.nu cmd/build.nu
+      - ln -sf ../../nu-shared/lib lib/shared
+      - ln -sf ../nu-shared/CLAUDE-nushell.md .
+      - ln -sf ../nu-shared/.pre-commit-config.yaml .
+      - ln -sf ../nu-shared/.mcp.json .
+      - |
+        if [ ! -f Taskfile.yml ]; then
+          cat > Taskfile.yml <<EOF
+        version: '3'
+
+        includes:
+          main:
+            taskfile: "$HOME/.taskfile/Taskfile.nushell.yml"
+            excludes: [test:unit, test:integration, test:failed]
+            flatten: true
+        EOF
+          echo "✅ Taskfile.yml created"
+        else
+          echo "ℹ️  Taskfile.yml already exists, skipping creation"
+        fi
+
   default:
     desc: Show available tasks
     cmds:
