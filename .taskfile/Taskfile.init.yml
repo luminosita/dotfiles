@@ -42,7 +42,7 @@ tasks:
         includes:
           main:
             taskfile: "$HOME/.taskfile/Taskfile.main.yml"
-            excludes: []
+            excludes: [check, build:assembly]
             flatten: true
           nu-shell:
             taskfile: "$HOME/.taskfile/Taskfile.nushell.yml"

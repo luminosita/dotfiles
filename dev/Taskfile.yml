@@ -1,0 +1,7 @@
+version: '3'
+
+includes:
+  init:
+    taskfile: "$HOME/.taskfile/Taskfile.init.yml"
+    excludes: []
+    flatten: true

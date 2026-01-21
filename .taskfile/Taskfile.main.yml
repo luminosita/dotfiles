@@ -26,6 +26,18 @@ vars:
   TALOS_IMAGE_FACTORY_API_URL: https://factory.talos.dev/schematics
 
 tasks:
+  check:
+    cmds:
+      - |
+        echo "❌ Error: Task must be defined by including module"
+      - exit 1
+
+  build:assembly:
+    cmds:
+      - |
+        echo "❌ Error: Task must be defined by including module"
+      - exit 1
+
   check:devbox:
     desc: Verify running inside devbox shell
     internal: true
@@ -93,9 +105,10 @@ tasks:
   test:talos:start:
     desc: Create kind cluster for integration tests (kubeconfig saved to ./out/, uses podman)
     deps:
-      - check:devbox
-      - task: test:talos:patch
-      - task: test:talos:schematic
+      - release:package:snapshot
+      - containers:push:snapshot
+      - test:talos:patch
+      - test:talos:schematic
     cmds:
       - |
         # Changing working dir to avoid creation of talos config files in project root
@@ -230,13 +243,6 @@ tasks:
 # ====================
 # Release Management
 # ====================
-  release:prepare:
-    desc: "Prepare release (run tests and checks before release)"
-    cmds:
-      - echo "🔍 Running pre-release checks..."
-      - task: check
-      - echo "✅ Release preparations complete"
-
   release:dry-run:
     internal: true
     desc: "Dry-run stable release (preview without publishing)"
@@ -255,7 +261,7 @@ tasks:
   release:
     desc: "Create stable release to Codeberg (production version, stable release)"
     deps:
-      - release:prepare
+      - check
       - build:assembly
     cmds:
       - echo "📦 Creating release to Codeberg..."

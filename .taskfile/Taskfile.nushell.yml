@@ -51,8 +51,6 @@ tasks:
     desc: Run all unit tests with summary reporting
     cmds:
       - task: test:unit 
-        vars:
-          CLI_ARGS: "--verbose {{.CLI_ARGS}}"
 
   test:verbose:
     desc: Run all unit tests with detailed assertion reporting

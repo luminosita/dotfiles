@@ -353,6 +353,8 @@ elif [[ "$OS" == "Linux" ]]; then
     fi
 fi
 
+mkdir -p dev/{incubating,sandbox}
+
 echo ""
 echo -e "${GREEN}"
 echo "╔════════════════════════════════════════════╗"
